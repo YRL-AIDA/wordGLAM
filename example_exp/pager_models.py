@@ -26,7 +26,10 @@ unit_words_and_styles = PageModelUnit(id="words_and_styles",
                             sub_model=WordsAndStylesModel(), 
                             converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
                             extractors=[])
-
+unit_words_and_styles_start = PageModelUnit(id="words_and_styles", 
+                            sub_model=WordsAndStylesModel(), 
+                            converters={}, 
+                            extractors=[])
 conf_graph = {"with_text": True} if WITH_TEXT else None
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
@@ -40,7 +43,7 @@ img2words_and_styles = PageModel(page_units=[
 ])
 
 words_and_styles2graph = PageModel(page_units=[
-    unit_words_and_styles,
+    unit_words_and_styles_start,
     unit_graph
 ])
 

@@ -61,11 +61,13 @@ if __name__ == "__main__":
         graph["true_nodes"] = nodes_ind
         return graph
     if not os.path.exists(PATH_GRAPHS_JSONS):
-        files = os.listdir(PATH_WORDS_AND_STYLES_JSONS)
+        os.mkdir(PATH_GRAPHS_JSONS)
+        dataset_dir = os.path.join(PATH_WORDS_AND_STYLES_JSONS, 'train')
+        files = os.listdir(dataset_dir)
         N = len(files)
         for i, json_file in enumerate(files):
             try:
-                graph = get_graph_from_file(os.path.join(PATH_WORDS_AND_STYLES_JSONS, json_file), words_and_styles2graph)
+                graph = get_graph_from_file(os.path.join(dataset_dir, json_file), words_and_styles2graph)
                 path_graph = os.path.join(PATH_GRAPHS_JSONS, json_file)
                 with open(path_graph, "w") as f:
                     json.dump(graph, f)
