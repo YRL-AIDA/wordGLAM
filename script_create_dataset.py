@@ -9,10 +9,14 @@ if __name__ == "__main__":
     img2words_and_styles, words_and_styles2graph = get_preprocessing_models()
     # Первый шаг, получаем информацию из картинок и разметки PubLayNet
     def get_words_and_styles(img_path):
-        img2words_and_styles.read_from_file(img_path)
-        img2words_and_styles.extract()
-        return img2words_and_styles.page_units[-1].sub_model.to_dict(is_vec=True)
-    if not os.path.exist(PATH_WORDS_AND_STYLES_JSONS):    
+        try:
+            img2words_and_styles.read_from_file(img_path)
+            img2words_and_styles.extract()
+            return img2words_and_styles.page_units[-1].sub_model.to_dict(is_vec=True)
+        except:
+            return {}
+
+    if not os.path.exists(PATH_WORDS_AND_STYLES_JSONS):    
         pln_ds = PubLayNetDataset(PATH_PUBLAYNET, PATH_WORDS_AND_STYLES_JSONS)
         pln_ds.create_tmp_annotation_jsons(path_tmp_dataset=PATH_WORDS_AND_STYLES_JSONS, 
                                        fun_additional_info=get_words_and_styles, 
