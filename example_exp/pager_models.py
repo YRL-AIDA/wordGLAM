@@ -22,10 +22,10 @@ unit_image = PageModelUnit(id="image",
                                extractors=[])
     
 conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4 }
-unit_words_and_styles = PageModelUnit(id="word_and_style", 
+unit_words_and_styles = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
                             converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
-                            extractors=[]),
+                            extractors=[])
 
 conf_graph = {"with_text": True} if WITH_TEXT else None
 unit_graph = PageModelUnit(id="graph", 
@@ -33,14 +33,13 @@ unit_graph = PageModelUnit(id="graph",
                             extractors=[],  
                             converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph(conf_graph) 
                                                             if TYPE_GRAPH == "Delaunay" else 
-                                                            WordsAndStylesToSpGraph4N(conf_graph) }),
-
-img2words_and_styles = PageModel([
+                                                            WordsAndStylesToSpGraph4N(conf_graph) })
+img2words_and_styles = PageModel(page_units=[
     unit_image, 
     unit_words_and_styles
 ])
 
-words_and_styles2graph = PageModel([
+words_and_styles2graph = PageModel(page_units=[
     unit_words_and_styles,
     unit_graph
 ])
@@ -51,7 +50,7 @@ def get_img2phis(conf):
                         sub_model=PhisicalModel(), 
                         extractors=[], 
                         converters={"words_and_styles_model": WordsAndStylesToGLAMBlocks(conf=conf)})
-    return PageModel([
+    return PageModel(page_units=[
         unit_image, 
         unit_words_and_styles,
         unit_phis

@@ -12,9 +12,9 @@ if __name__ == "__main__":
         img2words_and_styles.read_from_file(img_path)
         img2words_and_styles.extract()
         return img2words_and_styles.page_units[-1].sub_model.to_dict(is_vec=True)
-    
-    pln_ds = PubLayNetDataset(PATH_PUBLAYNET, PATH_WORDS_AND_STYLES_JSONS)
-    pln_ds.create_tmp_annotation_jsons(path_tmp_dataset=PATH_WORDS_AND_STYLES_JSONS, 
+    if not os.path.exist(PATH_WORDS_AND_STYLES_JSONS):    
+        pln_ds = PubLayNetDataset(PATH_PUBLAYNET, PATH_WORDS_AND_STYLES_JSONS)
+        pln_ds.create_tmp_annotation_jsons(path_tmp_dataset=PATH_WORDS_AND_STYLES_JSONS, 
                                        fun_additional_info=get_words_and_styles, 
                                        start_min_category= START, finish_min_category=FINAL)
     
@@ -56,17 +56,17 @@ if __name__ == "__main__":
         graph["true_edges"] = edges_ind
         graph["true_nodes"] = nodes_ind
         return graph
-
-    files = os.listdir(PATH_WORDS_AND_STYLES_JSONS)
-    N = len(files)
-    for i, json_file in enumerate(files):
-        try:
-            graph = get_graph_from_file(os.path.join(PATH_WORDS_AND_STYLES_JSONS, json_file), words_and_styles2graph)
-            path_graph = os.path.join(PATH_GRAPHS_JSONS, json_file)
-            with open(path_graph, "w") as f:
-                json.dump(graph, f)
-        except:
-            print("error in ", json_file)
-        print(f"{(i+1)/N*100:.2f} %"+20*" ", end='\r')     
+    if not os.path.exists(PATH_GRAPHS_JSONS):
+        files = os.listdir(PATH_WORDS_AND_STYLES_JSONS)
+        N = len(files)
+        for i, json_file in enumerate(files):
+            try:
+                graph = get_graph_from_file(os.path.join(PATH_WORDS_AND_STYLES_JSONS, json_file), words_and_styles2graph)
+                path_graph = os.path.join(PATH_GRAPHS_JSONS, json_file)
+                with open(path_graph, "w") as f:
+                    json.dump(graph, f)
+            except:
+                print("error in ", json_file)
+            print(f"{(i+1)/N*100:.2f} %"+20*" ", end='\r')     
     
     

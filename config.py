@@ -1,11 +1,11 @@
 from example_exp import pager_models as exp_models
 import os 
 
-PATH_PUBLAYNET = os.environment["PATH_PUBLAYNET"]
+PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
 START = 0
-FINAL = 100
-PATH_WORDS_AND_STYLES_JSONS = os.environment["PATH_WORDS_AND_STYLES_JSONS"]
-PATH_GRAPHS_JSONS = os.environment["PATH_GRAPH_JSONS"]
+FINAL = 50
+PATH_WORDS_AND_STYLES_JSONS = os.environ["PATH_WORDS_AND_STYLES_JSONS"]
+PATH_GRAPHS_JSONS = os.environ["PATH_GRAPH_JSONS"]
 
 PATH_TEST_DATASET = PATH_PUBLAYNET
 PATH_TEST_IMAGES = os.path.join(PATH_TEST_DATASET, "val")
@@ -18,7 +18,7 @@ PARAMS = {
         "node_featch": 37,
         "edge_featch": 0,
         "epochs": 100,
-        "batch_size": 500,
+        "batch_size": 5,
         "learning_rate": 0.05,
         "H1": [64, 64, 64, 64, 64],
         "H2": [64]
