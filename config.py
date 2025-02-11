@@ -1,15 +1,15 @@
 from example_exp import pager_models as exp_models
 import os 
 
-PATH_PUBLAYNET = ""
+PATH_PUBLAYNET = os.environment["PATH_PUBLAYNET"]
 START = 0
 FINAL = 100
-PATH_WORDS_AND_STYLES_JSONS = ""
-PATH_GRAPHS_JSONS = ""
+PATH_WORDS_AND_STYLES_JSONS = os.environment["PATH_WORDS_AND_STYLES_JSONS"]
+PATH_GRAPHS_JSONS = os.environment["PATH_GRAPH_JSONS"]
 
-PATH_TEST_DATASET = ""
-PATH_TEST_IMAGES = os.path.join(PATH_TEST_DATASET, "images")
-PATH_TEST_JSON = ""
+PATH_TEST_DATASET = PATH_PUBLAYNET
+PATH_TEST_IMAGES = os.path.join(PATH_TEST_DATASET, "val")
+PATH_TEST_JSON = os.path.join(PATH_TEST_DATASET, "val_compr.json")
 
 GLAM_NODE_MODEL = "example_exp/glam_node_model"
 GLAM_EDGE_MODEL = "example_exp/glam_edge_model"
