@@ -27,7 +27,7 @@ class MyConverter(BaseConverter):
         
 class MyExtractor(BaseExtractor):
     def extract(self, model: BaseSubModel) -> None:
-        for node, word in zip(model.nodes_feature, model.words)
+        for node, word in zip(model.nodes_feature, model.words):
             node.append(word.content)
         
 
