@@ -230,4 +230,53 @@ EPOCH #96	 2.02573116 (VAL: 2.11037663)
 EPOCH #97	 2.02390374 (VAL: 2.10705882)
 EPOCH #98	 2.02448251 (VAL: 2.10257571)
 EPOCH #99	 2.02605965 (VAL: 2.10427970)
-Время обучения: 1134.63 сек
+Время обучения: 1134.63 секDATASET INFO:
+count row: 3407
+first: dict_keys(['A', 'nodes_feature', 'edges_feature', 'true_edges', 'true_nodes'])
+	 A:(2, 1072)
+	 nodes_feature:(527, 41)
+	 edges_feature:(1072, 2)
+	 true_edges:(1072,)
+	 true_nodes:(527,)
+end:dict_keys(['A', 'nodes_feature', 'edges_feature', 'true_edges', 'true_nodes'])
+	 A(2, 1220)
+	 nodes_feature:(588, 41)
+	 edges_feature:(1220, 2)
+	 true_edges:"(1220,)
+	 true_nodes:(588,)
+
+node_featch:	37
+edge_featch:	2
+epochs:	100
+batch_size:	500
+learning_rate:	0.05
+H1:	[64, 64, 64, 64, 64]
+H2:	[64]
+DATASET INFO:
+count row: 3407
+first: dict_keys(['A', 'nodes_feature', 'edges_feature', 'true_edges', 'true_nodes'])
+	 A:(2, 1072)
+	 nodes_feature:(527, 41)
+	 edges_feature:(1072, 2)
+	 true_edges:(1072,)
+	 true_nodes:(527,)
+end:dict_keys(['A', 'nodes_feature', 'edges_feature', 'true_edges', 'true_nodes'])
+	 A(2, 1220)
+	 nodes_feature:(588, 41)
+	 edges_feature:(1220, 2)
+	 true_edges:"(1220,)
+	 true_nodes:(588,)
+
+node_featch:	41
+edge_featch:	2
+epochs:	100
+batch_size:	500
+learning_rate:	0.05
+H1:	[64, 64, 64, 64, 64]
+H2:	[64]
+EPOCH #0	 2.93544253 (VAL: 2.36706556)
+EPOCH #1	 2.33995493 (VAL: 2.29269167)
+EPOCH #2	 2.27320449 (VAL: 2.22634093)
+EPOCH #3	 2.21662332 (VAL: 2.17340210)
+EPOCH #4	 2.16921255 (VAL: 2.12881412)
+EPOCH #5	 2.13202885 (VAL: 2.09315322)

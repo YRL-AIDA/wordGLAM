@@ -3,7 +3,7 @@ import os
 
 PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
 START = 0
-FINAL = 50
+FINAL = 10000
 PATH_WORDS_AND_STYLES_JSONS = os.environ["PATH_WORDS_AND_STYLES_JSONS"]
 PATH_GRAPHS_JSONS = os.environ["PATH_GRAPH_JSONS"]
 
@@ -17,13 +17,13 @@ LOG_FILE = "example_exp/log.txt"
 PARAMS = {
         "node_featch": 37,
         "edge_featch": 2,
-        "epochs": 100,
-        "batch_size": 5,
+        "epochs": 400,
+        "batch_size": 500,
         "learning_rate": 0.05,
         "H1": [64, 64, 64, 64, 64],
         "H2": [64]
     }
-SAVE_FREQUENCY = 10
+SAVE_FREQUENCY = 40
 SEG_K = 0.5
 
 def get_preprocessing_models():
