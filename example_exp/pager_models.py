@@ -52,7 +52,7 @@ def get_img2phis(conf):
     unit_phis = PageModelUnit(id="phisical_model", 
                         sub_model=PhisicalModel(), 
                         extractors=[], 
-                        converters={"words_and_styles_model": WordsAndStylesToGLAMBlocks(conf=conf)})
+                        converters={"words_and_styles": WordsAndStylesToGLAMBlocks(conf=conf)})
     return PageModel(page_units=[
         unit_image, 
         unit_words_and_styles,

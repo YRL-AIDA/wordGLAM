@@ -16,7 +16,7 @@ GLAM_EDGE_MODEL = "example_exp/glam_edge_model"
 LOG_FILE = "example_exp/log.txt"
 PARAMS = {
         "node_featch": 37,
-        "edge_featch": 0,
+        "edge_featch": 2,
         "epochs": 100,
         "batch_size": 5,
         "learning_rate": 0.05,

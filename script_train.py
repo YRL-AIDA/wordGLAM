@@ -119,11 +119,17 @@ def validation(models, dataset, criterion):
         print(f"{(j+1)/len(dataset)*100:.2f} % loss = {my_loss_list[-1]:.5f} {' '*30}", end='\r')
     return np.mean(my_loss_list)
 
-def split_train_val(dataset, val_split=0.2, shuffle=True, seed=1234,batch_size=64):
-    val_size = len(dataset)*val_split
-    train_size = len(dataset)-val_size
-    dataset_train, dataset_val = random_split(dataset, [train_size, val_size])
-    return DataLoader(dataset_train, batch_size=batch_size, shuffle=True), DataLoader(dataset_val, batch_size=batch_size, shuffle=True)
+
+def split_index_train_val(dataset, val_split=0.2, shuffle=True, seed=1234,batch_size=64):
+    N = len(dataset)
+    count_batchs = int(N*(1-val_split))//batch_size
+    train_size = count_batchs * batch_size 
+    indexs = [i for i in range(N)]
+    np.random.shuffle(indexs)
+    train_indexs = indexs[:train_size]
+    val_indexs = indexs[train_size:]
+    batchs_train_indexs = [[train_indexs[k*batch_size+i] for i in range(batch_size)] for k in range(count_batchs)]
+    return batchs_train_indexs, val_indexs    
 
 def train_step(models, batch, optimizer, criterion):
     optimizer.zero_grad()
@@ -152,12 +158,13 @@ def train_model(params, models, dataset, save_frequency=5):
         for key, val in params.items():
             f.write(f"{key}:\t{val}\n")
     
-    train_dataset, val_dataset = split_train_val(dataset, val_split=0.1, batch_size=params["batch_size"])
+    train_dataset, val_dataset = split_index_train_val(dataset, val_split=0.1, batch_size=params["batch_size"])
     for k in range(params["epochs"]):
         my_loss_list = []
         if k == 0:
             start = time.time()
-        for l, batch in enumerate(train_dataset):
+        for l, batch_indexs in enumerate(train_dataset):
+            batch = [dataset[ind] for ind in batch_indexs]
             batch_loss = train_step(models, batch, optimizer, criterion)
             my_loss_list.append(batch_loss)
             print(f"Batch # {l+1} loss={my_loss_list[-1]:.4f}" + " "*40)
@@ -165,7 +172,8 @@ def train_model(params, models, dataset, save_frequency=5):
                 print(f"Время обучения batch'а {time.time()-start:.2f} сек")
         train_val = np.mean(my_loss_list)
         loss_list.append(train_val)
-        validation_val = validation(models, val_dataset, criterion)
+        batchs = [[dataset[ind] for ind in val_dataset]]
+        validation_val = validation(models, batchs, criterion)
         print("="*10, f"EPOCH #{k+1}","="*10, f"({train_val:.4f}/{validation_val:.4f})")
         if k == 0:
             print(f"Время обучения epoch {time.time()-start:.2f} сек")    
@@ -203,12 +211,12 @@ end:{dataset[-1].keys()}
 \t true_nodes:{np.shape(dataset[-1]["true_nodes"])}
 
 """
+        print(str_)
+        with open(LOG_FILE, 'a') as f:    
+            f.write(str_)
     except:
-        pass
+        print(dataset)
 
-    print(str_)
-    with open(LOG_FILE, 'a') as f:    
-        f.write(str_)
     COUNT_CLASS_NODE = 5
     node_glam = NodeGLAM(PARAMS["node_featch"], PARAMS["H1"], COUNT_CLASS_NODE)
     SIZE_VEC_FOR_EDGE = 2*PARAMS["node_featch"]+2*COUNT_CLASS_NODE + PARAMS["edge_featch"]
