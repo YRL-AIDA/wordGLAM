@@ -27,8 +27,10 @@ class MyConverter(BaseConverter):
         
 class MyExtractor(BaseExtractor):
     def extract(self, model: BaseSubModel) -> None:
+#                                      v-- Информция здесь уже есть, так как мы переделали конвертер
         for node, word in zip(model.nodes_feature, model.words):
-            node.append(word.content)
+            node[-1] = 1 if word.content[0].isupper() else 0 # Меняю последний признак на такой
+
         
 
 unit_image = PageModelUnit(id="image", 
@@ -48,8 +50,8 @@ unit_words_and_styles_start = PageModelUnit(id="words_and_styles",
 conf_graph = {"with_text": True} if WITH_TEXT else None
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
-                            extractors=[],  
-                            converters={"words_and_styles": MyConverter(WordsAndStylesToSpDelaunayGraph(conf_graph) 
+                            extractors=[MyExtractor()],  #<--- Новый экстрактор
+                            converters={"words_and_styles": MyConverter(WordsAndStylesToSpDelaunayGraph(conf_graph) #<---Изменения в конвертере
                                                             if TYPE_GRAPH == "Delaunay" else 
                                                             WordsAndStylesToSpGraph4N(conf_graph)) })
 img2words_and_styles = PageModel(page_units=[
