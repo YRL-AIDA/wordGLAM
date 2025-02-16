@@ -13,7 +13,7 @@ from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlock
 from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
 import os 
 
-PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
+PATH_STYLE_MODEL = os.getenv("PATH_STYLE_MODEL", "default_path")
 WITH_TEXT = True
 TYPE_GRAPH = "4N"
 
