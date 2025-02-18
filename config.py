@@ -23,6 +23,8 @@ PARAMS = {
         "H1": [64, 64, 64, 64, 64],
         "H2": [64]
     }
+PUBLAYNET_IMBALANCE = [0.31,0.02,0.05,0.31,0.31]
+EDGE_IMBALANCE = 0.2
 SAVE_FREQUENCY = 40
 SEG_K = 0.5
 

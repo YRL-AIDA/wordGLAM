@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BCELoss, CrossEntropyLoss
+from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss
 from torch.nn.functional import relu
 from torch_geometric.nn import BatchNorm, TAGConv
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -8,8 +8,8 @@ import numpy as np
 import os
 import json
 import time
-from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS
-
+from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS,PUBLAYNET_IMBALANCE, EDGE_IMBALANCE
+device = torch.device('cuda:0' if torch.cuda.device_count() != 0 else 'cpu')
 class NodeGLAM(torch.nn.Module):
     def __init__(self,  input_, h, output_):
         super(NodeGLAM, self).__init__()
@@ -57,9 +57,9 @@ class EdgeGLAM(torch.nn.Module):
 class CustomLoss(torch.nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
-        
-        self.bce = BCELoss()
-        self.ce = CrossEntropyLoss()
+                    #BCELoss
+        self.bce = BCEWithLogitsLoss(pos_weight=torch.tensor([EDGE_IMBALANCE]).to(device))
+        self.ce = CrossEntropyLoss(weight=torch.tensor(PUBLAYNET_IMBALANCE).to(device))
 
     def forward(self, n_pred, n_true, e_pred, e_true):
         loss = self.ce(n_pred, n_true) + 4*self.bce(e_pred, e_true)
@@ -97,11 +97,11 @@ def get_tensor_from_graph(graph):
     x = graph["nodes_feature"]
     N = len(x)
     
-    X = torch.tensor(data=x, dtype=torch.float32)
-    Y = torch.tensor(data=y, dtype=torch.float32)
-    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32)
-    E_true = torch.tensor(data=v_true, dtype=torch.float32)
-    N_true = torch.tensor(data=n_true, dtype=torch.float32)
+    X = torch.tensor(data=x, dtype=torch.float32).to(device)
+    Y = torch.tensor(data=y, dtype=torch.float32).to(device)
+    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32).to(device)
+    E_true = torch.tensor(data=v_true, dtype=torch.float32).to(device)
+    N_true = torch.tensor(data=n_true, dtype=torch.float32).to(device)
     return X, Y, sp_A, E_true, N_true, i
 
 def validation(models, dataset, criterion):
@@ -111,7 +111,7 @@ def validation(models, dataset, criterion):
         for j, graph in enumerate(batch):
             X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
             Node_emb = models[0](X, sp_A)
-            Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1)
+            Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
             E_pred = models[1](Omega)
             loss = criterion(Node_emb, N_true, E_pred, E_true)
             my_loss_list_batch.append(loss.item())
@@ -138,7 +138,7 @@ def train_step(models, batch, optimizer, criterion):
     for j, graph in enumerate(batch):
         X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
         Node_emb = models[0](X, sp_A)
-        Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1)
+        Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
         E_pred = models[1](Omega)
         loss = criterion(Node_emb, N_true, E_pred, E_true)
         my_loss_list.append(loss.item())
@@ -153,6 +153,8 @@ def train_model(params, models, dataset, save_frequency=5):
     lr=params["learning_rate"],
     )
     criterion = CustomLoss()
+    models[0].to(device)
+    models[1].to(device)
     loss_list = []
     with open(LOG_FILE, 'a') as f:
         for key, val in params.items():
