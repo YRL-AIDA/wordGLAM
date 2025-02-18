@@ -11,8 +11,10 @@ from pager.page_model.sub_models import ImageToWordsAndCNNStyles,  WordsAndStyle
 from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks
 from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
-PATH_STYLE_MODEL = os.getenv("PATH_STYLE_MODEL", "default_path")
+PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
 WITH_TEXT = True
 TYPE_GRAPH = "4N"
 
