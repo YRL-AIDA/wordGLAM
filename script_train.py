@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss
+from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU
 from torch.nn.functional import relu
 from torch_geometric.nn import BatchNorm, TAGConv
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -8,11 +8,12 @@ import numpy as np
 import os
 import json
 import time
-from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS,PUBLAYNET_IMBALANCE, EDGE_IMBALANCE
+from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS,PUBLAYNET_IMBALANCE, EDGE_IMBALANCE,EDGE_COEF
 device = torch.device('cuda:0' if torch.cuda.device_count() != 0 else 'cpu')
 class NodeGLAM(torch.nn.Module):
     def __init__(self,  input_, h, output_):
         super(NodeGLAM, self).__init__()
+        self.activation = GELU()
         self.batch_norm1 = BatchNorm(input_)
         self.linear1 = Linear(input_, h[0]) 
         self.tag1 = TAGConv(h[0], h[1])
@@ -25,23 +26,25 @@ class NodeGLAM(torch.nn.Module):
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         x = self.batch_norm1(x)
         h = self.linear1(x)
-        h = relu(h)
+        h = self.activation(h)
         h = self.tag1(h, edge_index)
-        h = relu(h)
+        h = self.activation(h)
         
         h = self.linear2(h)
-        h = relu(h)
+        h = self.activation(h)
         h = self.tag2(h, edge_index)
-        h = relu(h)
+        h = self.activation(h)
         a = torch.cat([x, h], dim=1)
         a = self.linear3(a)
-        a = relu(a)
+        a = self.activation(a)
         a = self.linear4(a)
-        return torch.softmax(a, dim=-1)
+        # a = torch.softmax(a, dim=-1)
+        return a
 
 class EdgeGLAM(torch.nn.Module):
     def __init__(self, input_, h, output_):
         super(EdgeGLAM, self).__init__()
+        self.activation = GELU()
         self.batch_norm2 = BatchNorm(input_, output_)
         self.linear1 = Linear(input_, h[0]) 
         self.linear2 = Linear(h[0], output_)
@@ -49,9 +52,9 @@ class EdgeGLAM(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.batch_norm2(x)
         h = self.linear1(x)
-        h = relu(h)
+        h = self.activation(h)
         h = self.linear2(h)
-        h = torch.sigmoid(h)
+        # h = torch.sigmoid(h)
         return torch.squeeze(h, 1)
 
 class CustomLoss(torch.nn.Module):
@@ -62,7 +65,7 @@ class CustomLoss(torch.nn.Module):
         self.ce = CrossEntropyLoss(weight=torch.tensor(PUBLAYNET_IMBALANCE).to(device))
 
     def forward(self, n_pred, n_true, e_pred, e_true):
-        loss = self.ce(n_pred, n_true) + 4*self.bce(e_pred, e_true)
+        loss = self.ce(n_pred, n_true) + EDGE_COEF*self.bce(e_pred, e_true)
         return loss
 
 class GLAMDataset(Dataset):

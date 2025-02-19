@@ -20,13 +20,14 @@ PARAMS = {
         "epochs": 400,
         "batch_size": 500,
         "learning_rate": 0.05,
-        "H1": [64, 64, 64, 64, 64],
-        "H2": [64]
+        "H1": [256, 128, 64, 32, 16],
+        "H2": [8]
     }
-PUBLAYNET_IMBALANCE = [0.31,0.02,0.05,0.31,0.31]
-EDGE_IMBALANCE = 0.2
-SAVE_FREQUENCY = 40
+SAVE_FREQUENCY = 10
 SEG_K = 0.5
+PUBLAYNET_IMBALANCE = [1.378, 0.033, 2.327, 0.845, 0.417]
+EDGE_IMBALANCE = 0.15
+EDGE_COEF = 4 # 4
 
 def get_preprocessing_models():
     return exp_models.img2words_and_styles, exp_models.words_and_styles2graph
