@@ -20,7 +20,8 @@ class NodeGLAM(torch.nn.Module):
         self.linear2 = Linear(h[1], h[2]) 
         self.tag2 = TAGConv(h[2], h[3])
         self.linear3 = Linear(h[3]+input_, h[4])
-        self.linear4 =Linear(h[4], output_)
+        self.linear4 =Linear(h[4], h[5])
+        self.classifer = Linear(h[5], output_)
 
     
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
@@ -38,8 +39,10 @@ class NodeGLAM(torch.nn.Module):
         a = self.linear3(a)
         a = self.activation(a)
         a = self.linear4(a)
+
+        cl = self.classifer(self.activation(a))
         # a = torch.softmax(a, dim=-1)
-        return a
+        return a, cl
 
 class EdgeGLAM(torch.nn.Module):
     def __init__(self, input_, h, output_):
@@ -113,10 +116,10 @@ def validation(models, dataset, criterion):
         my_loss_list_batch = []
         for j, graph in enumerate(batch):
             X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
-            Node_emb = models[0](X, sp_A)
+            Node_emb, Node_class = models[0](X, sp_A)
             Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
             E_pred = models[1](Omega)
-            loss = criterion(Node_emb, N_true, E_pred, E_true)
+            loss = criterion(Node_class, N_true, E_pred, E_true)
             my_loss_list_batch.append(loss.item())
         my_loss_list.append(np.mean(my_loss_list_batch))
         print(f"{(j+1)/len(dataset)*100:.2f} % loss = {my_loss_list[-1]:.5f} {' '*30}", end='\r')
@@ -140,10 +143,10 @@ def train_step(models, batch, optimizer, criterion):
    
     for j, graph in enumerate(batch):
         X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
-        Node_emb = models[0](X, sp_A)
+        Node_emb, Node_class = models[0](X, sp_A)
         Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
         E_pred = models[1](Omega)
-        loss = criterion(Node_emb, N_true, E_pred, E_true)
+        loss = criterion(Node_class, N_true, E_pred, E_true)
         my_loss_list.append(loss.item())
         print(f"Batch loss={my_loss_list[-1]:.4f}" + " "*40, end="\r")
         loss.backward()
@@ -224,6 +227,6 @@ end:{dataset[-1].keys()}
 
     COUNT_CLASS_NODE = 5
     node_glam = NodeGLAM(PARAMS["node_featch"], PARAMS["H1"], COUNT_CLASS_NODE)
-    SIZE_VEC_FOR_EDGE = 2*PARAMS["node_featch"]+2*COUNT_CLASS_NODE + PARAMS["edge_featch"]
+    SIZE_VEC_FOR_EDGE = 2*PARAMS["node_featch"]+2*PARAMS["H1"][-1] + PARAMS["edge_featch"]
     edge_glam = EdgeGLAM(SIZE_VEC_FOR_EDGE, PARAMS["H2"], 1)
     train_model(PARAMS, [node_glam, edge_glam], dataset, save_frequency=SAVE_FREQUENCY)
