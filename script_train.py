@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BCELoss, CrossEntropyLoss
+from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU
 from torch.nn.functional import relu
 from torch_geometric.nn import BatchNorm, TAGConv
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -8,40 +8,46 @@ import numpy as np
 import os
 import json
 import time
-from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS
-
+from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS,PUBLAYNET_IMBALANCE, EDGE_IMBALANCE,EDGE_COEF
+device = torch.device('cuda:0' if torch.cuda.device_count() != 0 else 'cpu')
 class NodeGLAM(torch.nn.Module):
     def __init__(self,  input_, h, output_):
         super(NodeGLAM, self).__init__()
+        self.activation = GELU()
         self.batch_norm1 = BatchNorm(input_)
         self.linear1 = Linear(input_, h[0]) 
         self.tag1 = TAGConv(h[0], h[1])
         self.linear2 = Linear(h[1], h[2]) 
         self.tag2 = TAGConv(h[2], h[3])
         self.linear3 = Linear(h[3]+input_, h[4])
-        self.linear4 =Linear(h[4], output_)
+        self.linear4 =Linear(h[4], h[5])
+        self.classifer = Linear(h[5], output_)
 
     
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         x = self.batch_norm1(x)
         h = self.linear1(x)
-        h = relu(h)
+        h = self.activation(h)
         h = self.tag1(h, edge_index)
-        h = relu(h)
+        h = self.activation(h)
         
         h = self.linear2(h)
-        h = relu(h)
+        h = self.activation(h)
         h = self.tag2(h, edge_index)
-        h = relu(h)
+        h = self.activation(h)
         a = torch.cat([x, h], dim=1)
         a = self.linear3(a)
-        a = relu(a)
+        a = self.activation(a)
         a = self.linear4(a)
-        return torch.softmax(a, dim=-1)
+
+        cl = self.classifer(self.activation(a))
+        # a = torch.softmax(a, dim=-1)
+        return a, cl
 
 class EdgeGLAM(torch.nn.Module):
     def __init__(self, input_, h, output_):
         super(EdgeGLAM, self).__init__()
+        self.activation = GELU()
         self.batch_norm2 = BatchNorm(input_, output_)
         self.linear1 = Linear(input_, h[0]) 
         self.linear2 = Linear(h[0], output_)
@@ -49,20 +55,20 @@ class EdgeGLAM(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.batch_norm2(x)
         h = self.linear1(x)
-        h = relu(h)
+        h = self.activation(h)
         h = self.linear2(h)
-        h = torch.sigmoid(h)
+        # h = torch.sigmoid(h)
         return torch.squeeze(h, 1)
 
 class CustomLoss(torch.nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
-        
-        self.bce = BCELoss()
-        self.ce = CrossEntropyLoss()
+                    #BCELoss
+        self.bce = BCEWithLogitsLoss(pos_weight=torch.tensor([EDGE_IMBALANCE]).to(device))
+        self.ce = CrossEntropyLoss(weight=torch.tensor(PUBLAYNET_IMBALANCE).to(device))
 
     def forward(self, n_pred, n_true, e_pred, e_true):
-        loss = self.ce(n_pred, n_true) + 4*self.bce(e_pred, e_true)
+        loss = self.ce(n_pred, n_true) + EDGE_COEF*self.bce(e_pred, e_true)
         return loss
 
 class GLAMDataset(Dataset):
@@ -97,11 +103,11 @@ def get_tensor_from_graph(graph):
     x = graph["nodes_feature"]
     N = len(x)
     
-    X = torch.tensor(data=x, dtype=torch.float32)
-    Y = torch.tensor(data=y, dtype=torch.float32)
-    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32)
-    E_true = torch.tensor(data=v_true, dtype=torch.float32)
-    N_true = torch.tensor(data=n_true, dtype=torch.float32)
+    X = torch.tensor(data=x, dtype=torch.float32).to(device)
+    Y = torch.tensor(data=y, dtype=torch.float32).to(device)
+    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32).to(device)
+    E_true = torch.tensor(data=v_true, dtype=torch.float32).to(device)
+    N_true = torch.tensor(data=n_true, dtype=torch.float32).to(device)
     return X, Y, sp_A, E_true, N_true, i
 
 def validation(models, dataset, criterion):
@@ -110,10 +116,10 @@ def validation(models, dataset, criterion):
         my_loss_list_batch = []
         for j, graph in enumerate(batch):
             X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
-            Node_emb = models[0](X, sp_A)
-            Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1)
+            Node_emb, Node_class = models[0](X, sp_A)
+            Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
             E_pred = models[1](Omega)
-            loss = criterion(Node_emb, N_true, E_pred, E_true)
+            loss = criterion(Node_class, N_true, E_pred, E_true)
             my_loss_list_batch.append(loss.item())
         my_loss_list.append(np.mean(my_loss_list_batch))
         print(f"{(j+1)/len(dataset)*100:.2f} % loss = {my_loss_list[-1]:.5f} {' '*30}", end='\r')
@@ -137,10 +143,10 @@ def train_step(models, batch, optimizer, criterion):
    
     for j, graph in enumerate(batch):
         X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
-        Node_emb = models[0](X, sp_A)
-        Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1)
+        Node_emb, Node_class = models[0](X, sp_A)
+        Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
         E_pred = models[1](Omega)
-        loss = criterion(Node_emb, N_true, E_pred, E_true)
+        loss = criterion(Node_class, N_true, E_pred, E_true)
         my_loss_list.append(loss.item())
         print(f"Batch loss={my_loss_list[-1]:.4f}" + " "*40, end="\r")
         loss.backward()
@@ -153,6 +159,8 @@ def train_model(params, models, dataset, save_frequency=5):
     lr=params["learning_rate"],
     )
     criterion = CustomLoss()
+    models[0].to(device)
+    models[1].to(device)
     loss_list = []
     with open(LOG_FILE, 'a') as f:
         for key, val in params.items():
@@ -219,6 +227,6 @@ end:{dataset[-1].keys()}
 
     COUNT_CLASS_NODE = 5
     node_glam = NodeGLAM(PARAMS["node_featch"], PARAMS["H1"], COUNT_CLASS_NODE)
-    SIZE_VEC_FOR_EDGE = 2*PARAMS["node_featch"]+2*COUNT_CLASS_NODE + PARAMS["edge_featch"]
+    SIZE_VEC_FOR_EDGE = 2*PARAMS["node_featch"]+2*PARAMS["H1"][-1] + PARAMS["edge_featch"]
     edge_glam = EdgeGLAM(SIZE_VEC_FOR_EDGE, PARAMS["H2"], 1)
     train_model(PARAMS, [node_glam, edge_glam], dataset, save_frequency=SAVE_FREQUENCY)

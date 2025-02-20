@@ -30,6 +30,9 @@ LOG_FILE = os.environ["LOG_FILE"]
 PARAMS = importlib.import_module(f"{EXPERIMENT}.experiment_params").EXPERIMENT_PARAMS
 SAVE_FREQUENCY = 40
 SEG_K = 0.5
+PUBLAYNET_IMBALANCE = [1.378, 0.033, 2.327, 0.845, 0.417]
+EDGE_IMBALANCE = 0.15
+EDGE_COEF = 4 # 4
 
 # try:
 #     exp_param = importlib.import_module(f"{EXPERIMENT}.experiment_params")
