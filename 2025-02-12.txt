@@ -1,8 +1,0 @@
-S T A R T ()
-S T A R T ()
-S T A R T ()
-mAP@IoU[0.50:0.95] = 0.0000
-mean time:  12.3253 sec.
-S T A R T ()
-mAP@IoU[0.50:0.95] = 0.00000378
-mean time:  12.3416 sec.

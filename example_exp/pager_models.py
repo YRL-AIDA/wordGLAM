@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
+
 WITH_TEXT = True
 TYPE_GRAPH = "4N"
 EXPERIMENT_PARAMS = {

@@ -2,36 +2,40 @@
 import os
 import importlib
 from dotenv import load_dotenv
-dotenv_path = os.path.join("example_exp", '.env')
+# dotenv_path = os.path.join('.env')
 
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
+# if os.path.exists(dotenv_path):
+#     load_dotenv(dotenv_path)
+load_dotenv(override=True)
 
 EXPERIMENT = os.environ["EXPERIMENT"]
+print(f"{EXPERIMENT}.pager_models")
 exp_models = importlib.import_module(f"{EXPERIMENT}.pager_models")
 
 PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
 
-START = 0
-FINAL = 10000
+START = os.environ["START"]
+FINAL = os.environ["FINAL"]
 
 PATH_WORDS_AND_STYLES_JSONS = os.environ["PATH_WORDS_AND_STYLES_JSONS"]
 PATH_GRAPHS_JSONS = os.environ["PATH_GRAPHS_JSONS"]
 
 PATH_TEST_DATASET = os.environ["PATH_TEST_DATASET"]
-PATH_TEST_IMAGES = os.path.join(PATH_TEST_DATASET, "val_compr")
-PATH_TEST_JSON = os.path.join(PATH_TEST_DATASET, "val_compr.json")
+PATH_TEST_IMAGES = os.environ["PATH_TEST_IMAGES"]
+PATH_TEST_JSON = os.environ["PATH_TEST_JSON"]
 
-GLAM_NODE_MODEL = os.environ["GLAM_NODE_MODEL"]
-GLAM_EDGE_MODEL = os.environ["GLAM_EDGE_MODEL"]
-LOG_FILE = os.environ["LOG_FILE"]
+
+GLAM_NODE_MODEL = os.path.join(EXPERIMENT, os.environ["GLAM_NODE_MODEL"])
+GLAM_EDGE_MODEL = os.path.join(EXPERIMENT, os.environ["GLAM_EDGE_MODEL"])
+LOG_FILE = os.path.join(EXPERIMENT, "log.txt")
 
 
 PARAMS = importlib.import_module(f"{EXPERIMENT}.pager_models").EXPERIMENT_PARAMS
-SAVE_FREQUENCY = 40
-PUBLAYNET_IMBALANCE = [1.378, 0.033, 2.327, 0.845, 0.417]
-EDGE_IMBALANCE = 0.15
-EDGE_COEF = 4
+SAVE_FREQUENCY = int(os.environ["SAVE_FREQUENCY"])
+
+PUBLAYNET_IMBALANCE = [float(num) for num in os.environ["PUBLAYNET_IMBALANCE"][1:-1].split(',')]
+EDGE_IMBALANCE = float(os.environ["EDGE_IMBALANCE"])
+EDGE_COEF = float(os.environ["EDGE_COEF"])
 
 # try:
 #     exp_param = importlib.import_module(f"{EXPERIMENT}.experiment_params")
