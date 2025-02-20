@@ -10,7 +10,7 @@ if os.path.exists(dotenv_path):
 EXPERIMENT = os.environ["EXPERIMENT"]
 exp_models = importlib.import_module(f"{EXPERIMENT}.pager_models")
 
-PATH_PUBLAYNET = "" #os.environ["PATH_PUBLAYNET"]
+PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
 
 START = 0
 FINAL = 10000
@@ -19,20 +19,19 @@ PATH_WORDS_AND_STYLES_JSONS = os.environ["PATH_WORDS_AND_STYLES_JSONS"]
 PATH_GRAPHS_JSONS = os.environ["PATH_GRAPHS_JSONS"]
 
 PATH_TEST_DATASET = os.environ["PATH_TEST_DATASET"]
-PATH_TEST_IMAGES = PATH_TEST_DATASET #os.path.join(PATH_TEST_DATASET, "val")
-PATH_TEST_JSON = os.path.join(PATH_TEST_DATASET, "result.json")
+PATH_TEST_IMAGES = os.path.join(PATH_TEST_DATASET, "val_compr")
+PATH_TEST_JSON = os.path.join(PATH_TEST_DATASET, "val_compr.json")
 
 GLAM_NODE_MODEL = os.environ["GLAM_NODE_MODEL"]
 GLAM_EDGE_MODEL = os.environ["GLAM_EDGE_MODEL"]
 LOG_FILE = os.environ["LOG_FILE"]
 
 
-PARAMS = importlib.import_module(f"{EXPERIMENT}.experiment_params").EXPERIMENT_PARAMS
+PARAMS = importlib.import_module(f"{EXPERIMENT}.pager_models").EXPERIMENT_PARAMS
 SAVE_FREQUENCY = 40
-SEG_K = 0.5
 PUBLAYNET_IMBALANCE = [1.378, 0.033, 2.327, 0.845, 0.417]
 EDGE_IMBALANCE = 0.15
-EDGE_COEF = 4 # 4
+EDGE_COEF = 4
 
 # try:
 #     exp_param = importlib.import_module(f"{EXPERIMENT}.experiment_params")
@@ -51,6 +50,6 @@ def get_final_model():
             "H2": PARAMS["H2"],
             "node_featch": PARAMS["node_featch"],
             "edge_featch": PARAMS["edge_featch"],
-            "seg_k": SEG_K
+            "seg_k": PARAMS["seg_k"]
 
     })
