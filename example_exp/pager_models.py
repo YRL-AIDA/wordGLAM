@@ -10,11 +10,23 @@ from pager.page_model.sub_models import ImageModel, WordsAndStylesModel, SpGraph
 from pager.page_model.sub_models import ImageToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
 from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks
 from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
-import os 
+import os
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
 WITH_TEXT = True
 TYPE_GRAPH = "4N"
+EXPERIMENT_PARAMS = {
+    "node_featch": 37,
+    "edge_featch": 2,
+    "epochs": 5,
+    "batch_size": 5,
+    "learning_rate": 0.05,
+    "H1": [256, 128, 64, 32, 16, 8],
+    "H2": [8],
+    "seg_k": 0.5
+}
 
 unit_image = PageModelUnit(id="image", 
                                sub_model=ImageModel(), 
