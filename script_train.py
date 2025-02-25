@@ -10,6 +10,7 @@ import json
 import time
 from config import GLAM_NODE_MODEL, GLAM_EDGE_MODEL, LOG_FILE, PARAMS,SAVE_FREQUENCY,PATH_GRAPHS_JSONS,PUBLAYNET_IMBALANCE, EDGE_IMBALANCE,EDGE_COEF
 device = torch.device('cuda:0' if torch.cuda.device_count() != 0 else 'cpu')
+# device = torch.device('cpu')
 class NodeGLAM(torch.nn.Module):
     def __init__(self,  input_, h, output_):
         super(NodeGLAM, self).__init__()
@@ -86,6 +87,30 @@ class GLAMDataset(Dataset):
             data = json.load(f)
         return data
 
+def delete_error_nodes(graph):
+    error_nodes = [i for i, n in enumerate(graph["true_nodes"]) if n == -1]
+    true_nodes = [i for i, n in enumerate(graph["true_nodes"]) if n != -1]
+    for index in sorted(error_nodes, reverse=True):
+        del graph["nodes_feature"][index]
+        del graph["true_nodes"][index]
+
+    error_edges = [i for i, e in enumerate(zip(graph["A"][0], graph["A"][1])) 
+                   if e[0] in error_nodes or 
+                      e[1] in error_nodes]
+  
+    for index in sorted(error_edges, reverse=True):
+        del graph["A"][0][index]
+        del graph["A"][1][index]
+        del graph["edges_feature"][index]
+        del graph["true_edges"][index]
+    new = dict()
+    for i, n in enumerate(true_nodes):
+        new[n] = i
+    
+    for i in range(len(graph["A"][0])):
+        graph["A"][0][i] = new[graph["A"][0][i]]
+        graph["A"][1][i] = new[graph["A"][1][i]]
+        
 
 def get_tensor_from_graph(graph):
     def class_node(n):
@@ -93,7 +118,7 @@ def get_tensor_from_graph(graph):
         if n!= -1:
             rez[n] = 1
         return rez
-        
+    delete_error_nodes(graph)
     i = graph["A"]
     v_in = [1 for e in graph["edges_feature"]]
     y = graph["edges_feature"]
@@ -116,6 +141,8 @@ def validation(models, dataset, criterion):
         my_loss_list_batch = []
         for j, graph in enumerate(batch):
             X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
+            if len(X) in (0, 1):                       
+                continue
             Node_emb, Node_class = models[0](X, sp_A)
             Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
             E_pred = models[1](Omega)
@@ -143,6 +170,8 @@ def train_step(models, batch, optimizer, criterion):
    
     for j, graph in enumerate(batch):
         X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
+        if len(X) in (0, 1):                       
+            continue
         Node_emb, Node_class = models[0](X, sp_A)
         Omega = torch.cat([Node_emb[i[0]],Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1).to(device)
         E_pred = models[1](Omega)
