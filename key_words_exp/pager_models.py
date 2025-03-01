@@ -136,12 +136,24 @@ words_and_styles2graph = PageModel(page_units=[
     unit_graph
 ])
 
+class MyGLAMConverter(WordsAndStylesToGLAMBlocks):
+    def __init__(self, conf):
+        super().__init__(conf)
+        self.my_extractor = MyExtractor()
+        self.my_converter = MyConverter(self.graph_converter)
+
+    def convert(self, input_model: WordsAndStylesModel, output_model: PhisicalModel) -> None:
+        words = input_model.words   
+        self.my_converter.convert(input_model, self.spgraph)
+        self.my_extractor.extract(self.spgraph) # <--- Добавленый экстрактор
+        graph = self.spgraph.to_dict()
+        self.set_output_block(output_model, words, graph)
 
 def get_img2phis(conf):
     unit_phis = PageModelUnit(id="phisical_model",
                               sub_model=PhisicalModel(),
                               extractors=[],
-                              converters={"words_and_styles": WordsAndStylesToGLAMBlocks(conf=conf)})
+                              converters={"words_and_styles": MyGLAMConverter(conf=conf)})
     return PageModel(page_units=[
         unit_image,
         unit_words_and_styles,
