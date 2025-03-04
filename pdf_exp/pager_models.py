@@ -6,12 +6,11 @@ get_img2phis
 """
 
 from pager import PageModel, PageModelUnit
-from pager.page_model.sub_models import BaseConverter, BaseExtractor, BaseSubModel, AddArgsFromModelExtractor
-from pager.page_model.sub_models import ImageModel, WordsAndStylesModel, SpGraph4NModel, BaseConverter
-from pager.page_model.sub_models import ImageToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
+from pager.page_model.sub_models import ImageModel, PDFModel, WordsAndStylesModel, SpGraph4NModel
+from pager.page_model.sub_models import ImageToWordsAndCNNStyles, PDFToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
 from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks
 from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
-import os 
+import os
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -29,49 +28,43 @@ EXPERIMENT_PARAMS = {
     "H2": [8],
     "seg_k": 0.5
 }
-
-# class MyConverter(BaseConverter):
-#     def __init__(self, old_converter):
-#         self.old_converter = old_converter
-
-#     def convert(self, input_model: BaseSubModel, output_model: BaseSubModel)-> None:
-#         self.old_converter.convert(input_model, output_model)
-#         output_model.words = input_model.words # Информация о словах не передается в SpGraph4NModel
-        
-class MyExtractor(BaseExtractor):
-    def extract(self, model: BaseSubModel) -> None:
-#                                      v-- Информция здесь уже есть, так как мы переделали конвертер
-        for node, word in zip(model.nodes_feature, model.words):
-            node[-1] = 1 if word.content[0].isupper() else 0 # Меняю последний признак на такой
-
-        
-
 unit_image = PageModelUnit(id="image", 
                                sub_model=ImageModel(), 
                                converters={}, 
                                extractors=[])
     
-conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4 }
+conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3,"onetone_delete": True, "k": 4 }
 unit_words_and_styles = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
                             converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
                             extractors=[])
-ws_model = WordsAndStylesModel()
+
+
+unit_pdf = PageModelUnit(id="pdf", 
+                               sub_model=ImageModel(), 
+                               converters={}, 
+                               extractors=[])
+
+unit_words_and_styles_pdf = PageModelUnit(id="words_and_styles", 
+                            sub_model=WordsAndStylesModel(), 
+                            converters={"image": PDFToWordsAndCNNStyles()}, 
+                            extractors=[])
+
 unit_words_and_styles_start = PageModelUnit(id="words_and_styles", 
-                            sub_model=ws_model, 
+                            sub_model=WordsAndStylesModel(), 
                             converters={}, 
                             extractors=[])
 conf_graph = {"with_text": True} if WITH_TEXT else None
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
-                            extractors=[AddArgsFromModelExtractor(ws_model), MyExtractor()],  #<--- Новый экстрактор
-                            converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph(conf_graph)
+                            extractors=[],  
+                            converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph(conf_graph) 
                                                             if TYPE_GRAPH == "Delaunay" else 
                                                             WordsAndStylesToSpGraph4N(conf_graph) })
 img2words_and_styles = PageModel(page_units=[
-    unit_image, 
-    unit_words_and_styles
-])
+    unit_pdf, 
+    unit_words_and_styles_pdf
+]) # На самом деле pdf2words_and_styles
 
 words_and_styles2graph = PageModel(page_units=[
     unit_words_and_styles_start,

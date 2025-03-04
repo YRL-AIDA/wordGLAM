@@ -34,7 +34,7 @@ unit_image = PageModelUnit(id="image",
                                converters={}, 
                                extractors=[])
     
-conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4 }
+conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3,"onetone_delete": True, "k": 4 }
 unit_words_and_styles = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
                             converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
