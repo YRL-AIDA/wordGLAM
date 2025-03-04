@@ -13,6 +13,7 @@ print(f"{EXPERIMENT}.pager_models")
 exp_models = importlib.import_module(f"{EXPERIMENT}.pager_models")
 
 PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
+PATH_PDF = os.environ["PATH_PDF"]
 
 START = os.environ["START"]
 FINAL = os.environ["FINAL"]

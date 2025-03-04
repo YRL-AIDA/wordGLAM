@@ -21,8 +21,8 @@ TYPE_GRAPH = "4N"
 EXPERIMENT_PARAMS = {
     "node_featch": 37,
     "edge_featch": 2,
-    "epochs": 5,
-    "batch_size": 5,
+    "epochs": 50,
+    "batch_size": 10,
     "learning_rate": 0.05,
     "H1": [256, 128, 64, 32, 16, 8],
     "H2": [8],
@@ -41,13 +41,13 @@ unit_words_and_styles = PageModelUnit(id="words_and_styles",
 
 
 unit_pdf = PageModelUnit(id="pdf", 
-                               sub_model=ImageModel(), 
+                               sub_model=PDFModel(), 
                                converters={}, 
                                extractors=[])
 
 unit_words_and_styles_pdf = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
-                            converters={"image": PDFToWordsAndCNNStyles()}, 
+                            converters={"pdf": PDFToWordsAndCNNStyles()}, 
                             extractors=[])
 
 unit_words_and_styles_start = PageModelUnit(id="words_and_styles", 

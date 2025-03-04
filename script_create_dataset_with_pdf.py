@@ -1,11 +1,15 @@
 from publaynet_reader import PubLayNetDataset 
 from pager.page_model.sub_models.dtype import ImageSegment
-from config import get_preprocessing_models, PATH_PUBLAYNET, START, FINAL, PATH_WORDS_AND_STYLES_JSONS, PATH_GRAPHS_JSONS
+from config import get_preprocessing_models, PATH_PUBLAYNET, START, FINAL, PATH_WORDS_AND_STYLES_JSONS, PATH_GRAPHS_JSONS, PATH_PDF
 import os
 import json
-
-PDF_PATH = "" # До train dir
-
+LABELS = {
+    'figure': 0,
+    'text': 1,
+    'title': 2,
+    'list': 3,
+    'table': 4
+}
 if __name__ == "__main__":   
     pdf2words_and_styles, words_and_styles2graph = get_preprocessing_models() # На самом деле первое pdf2words_and_styles
     # Первый шаг, получаем информацию из картинок и разметки PubLayNet
@@ -13,7 +17,7 @@ if __name__ == "__main__":
         
         try:
             name_pdf = ".".join(os.path.basename(img_path).split('.')[:-1])+'.pdf'
-            pdf_path = os.path.join(PDF_PATH, name_pdf)
+            pdf_path = os.path.join(PATH_PDF, name_pdf)
             pdf2words_and_styles.read_from_file(pdf_path)
             pdf2words_and_styles.extract()
             return pdf2words_and_styles.page_units[-1].sub_model.to_dict(is_vec=True)
@@ -21,10 +25,49 @@ if __name__ == "__main__":
             return {}
 
     if not os.path.exists(PATH_WORDS_AND_STYLES_JSONS):    
-        pln_ds = PubLayNetDataset(PATH_PUBLAYNET, PATH_WORDS_AND_STYLES_JSONS)
-        pln_ds.create_tmp_annotation_jsons(path_tmp_dataset=PATH_WORDS_AND_STYLES_JSONS, 
-                                       fun_additional_info=get_words_and_styles, 
-                                       start_min_category= START, finish_min_category=FINAL)
+        with open(os.path.join(PATH_PUBLAYNET, "train.json"), "r") as f:
+            dataset = json.load(f)
+        
+        # Индексы изображений по id
+        id2index_image = dict()
+        for i, im in enumerate(dataset["images"]):
+            id2index_image[im["id"]] = i
+            im["blocks"] = []
+        
+        # Имена категорий по id
+        id2name_category = dict()
+        for c in dataset["categories"]:
+            id2name_category[c["id"]] = c["name"]
+        print(id2name_category)
+        del dataset["categories"]
+
+        # Аннотации для каждого изображения
+        for an in dataset["annotations"]:
+            block = dict()
+            block["label"] = LABELS[id2name_category[an["category_id"]]]
+            block["x_top_left"] = int(an["bbox"][0])
+            block["y_top_left"] = int(an["bbox"][1])
+            block["width"] = int(an["bbox"][2])
+            block["height"] = int(an["bbox"][3])
+            dataset["images"][id2index_image[an["image_id"]]]["blocks"].append(block)
+            del an
+        
+        # Обработка изображения
+        N = len(dataset["images"])
+        os.mkdir(PATH_WORDS_AND_STYLES_JSONS)
+        os.mkdir(os.path.join(PATH_WORDS_AND_STYLES_JSONS, "train"))
+        for k, im in enumerate(dataset["images"]):
+            name = im["file_name"]
+            img_path = os.path.join(PATH_PUBLAYNET, "train", name)
+            words_and_styles = get_words_and_styles(img_path)
+            if words_and_styles == {}:
+                continue
+            im["additional_info"] = words_and_styles
+            with open(os.path.join(PATH_WORDS_AND_STYLES_JSONS, "train", name+'.json'), "w") as f:
+                json.dump(im, f)
+            print(f"{(k+1)/N*100:.2f}%"+" "*10, end="\r")
+        print("\n")
+
     
     # Второй шаг, строим граф из информации от картинок
 
