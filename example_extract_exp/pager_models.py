@@ -6,7 +6,7 @@ get_img2phis
 """
 
 from pager import PageModel, PageModelUnit
-from pager.page_model.sub_models import BaseConverter, BaseExtractor, BaseSubModel
+from pager.page_model.sub_models import BaseConverter, BaseExtractor, BaseSubModel, AddArgsFromModelExtractor
 from pager.page_model.sub_models import ImageModel, WordsAndStylesModel, SpGraph4NModel, BaseConverter
 from pager.page_model.sub_models import ImageToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
 from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks
@@ -30,13 +30,13 @@ EXPERIMENT_PARAMS = {
     "seg_k": 0.5
 }
 
-class MyConverter(BaseConverter):
-    def __init__(self, old_converter):
-        self.old_converter = old_converter
+# class MyConverter(BaseConverter):
+#     def __init__(self, old_converter):
+#         self.old_converter = old_converter
 
-    def convert(self, input_model: BaseSubModel, output_model: BaseSubModel)-> None:
-        self.old_converter.convert(input_model, output_model)
-        output_model.words = input_model.words # Информация о словах не передается в SpGraph4NModel
+#     def convert(self, input_model: BaseSubModel, output_model: BaseSubModel)-> None:
+#         self.old_converter.convert(input_model, output_model)
+#         output_model.words = input_model.words # Информация о словах не передается в SpGraph4NModel
         
 class MyExtractor(BaseExtractor):
     def extract(self, model: BaseSubModel) -> None:
@@ -56,17 +56,18 @@ unit_words_and_styles = PageModelUnit(id="words_and_styles",
                             sub_model=WordsAndStylesModel(), 
                             converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
                             extractors=[])
+ws_model = WordsAndStylesModel()
 unit_words_and_styles_start = PageModelUnit(id="words_and_styles", 
-                            sub_model=WordsAndStylesModel(), 
+                            sub_model=ws_model, 
                             converters={}, 
                             extractors=[])
 conf_graph = {"with_text": True} if WITH_TEXT else None
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
-                            extractors=[MyExtractor()],  #<--- Новый экстрактор
-                            converters={"words_and_styles": MyConverter(WordsAndStylesToSpDelaunayGraph(conf_graph) #<---Изменения в конвертере
+                            extractors=[AddArgsFromModelExtractor(ws_model), MyExtractor()],  #<--- Новый экстрактор
+                            converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph(conf_graph)
                                                             if TYPE_GRAPH == "Delaunay" else 
-                                                            WordsAndStylesToSpGraph4N(conf_graph)) })
+                                                            WordsAndStylesToSpGraph4N(conf_graph) })
 img2words_and_styles = PageModel(page_units=[
     unit_image, 
     unit_words_and_styles
