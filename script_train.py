@@ -140,6 +140,8 @@ def validation(models, dataset, criterion):
     for batch in dataset:
         my_loss_list_batch = []
         for j, graph in enumerate(batch):
+            if not 'true_nodes' in graph.keys():
+                continue
             X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
             if len(X) in (0, 1):                       
                 continue
@@ -169,6 +171,8 @@ def train_step(models, batch, optimizer, criterion):
     my_loss_list = []
    
     for j, graph in enumerate(batch):
+        if not 'true_nodes' in graph.keys():
+                continue
         X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
         if len(X) in (0, 1):                       
             continue

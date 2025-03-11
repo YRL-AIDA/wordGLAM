@@ -4,8 +4,6 @@ from pager.page_model.sub_models.dtype import ImageSegment
 from .pager_models import featch_words_and_styles, featch_A, nodes_feature,edges_feature
 
 
-
-
 def true_class_from_publaynet(blocks, words, A):
     # Вспомогательные функции
     def get_block_seg(json_block):
@@ -43,9 +41,9 @@ def extract(path_dataset, path_img_publaynet=None, path_pdf_publaynet=None):
         try:
             path_json = os.path.join(path_dataset, file)
             json_with_featchs.read_from_file(path_json)
-            path_img = os.path.join(path_img_publaynet, json_with_featchs.json['file_name'])
+            path_pdf = os.path.join(path_pdf_publaynet, json_with_featchs.json['file_name'][:-4]+'.pdf')
             
-            json_with_featchs.add_featchs(lambda: featch_words_and_styles(path_img), names=['styles', 'words'], 
+            json_with_featchs.add_featchs(lambda: featch_words_and_styles(path_pdf), names=['styles', 'words'], 
                                 is_reupdate=False, rewrite=True)
             
             json_with_featchs.add_featchs(lambda: featch_A(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['A'], 
