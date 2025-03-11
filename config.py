@@ -11,6 +11,7 @@ load_dotenv(override=True)
 EXPERIMENT = os.environ["EXPERIMENT"]
 print(f"{EXPERIMENT}.pager_models")
 exp_models = importlib.import_module(f"{EXPERIMENT}.pager_models")
+exp_dataset = importlib.import_module(f"{EXPERIMENT}.extract_dataset")
 
 PATH_PUBLAYNET = os.environ["PATH_PUBLAYNET"]
 PATH_PDF = os.environ["PATH_PDF"]
@@ -38,6 +39,8 @@ PUBLAYNET_IMBALANCE = [float(num) for num in os.environ["PUBLAYNET_IMBALANCE"][1
 EDGE_IMBALANCE = float(os.environ["EDGE_IMBALANCE"])
 EDGE_COEF = float(os.environ["EDGE_COEF"])
 
+
+extract = importlib.import_module(f"{EXPERIMENT}.extract_dataset").extract
 # try:
 #     exp_param = importlib.import_module(f"{EXPERIMENT}.experiment_params")
 #     PARAMS.update(exp_param.EXPERIMENT_PARAMS)
