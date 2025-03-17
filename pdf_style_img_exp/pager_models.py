@@ -7,10 +7,11 @@ get_img2phis
 
 from pager import PageModel, PageModelUnit
 from pager.page_model.sub_models import ImageModel, PDFModel, WordsAndStylesModel, SpGraph4NModel, JsonWithFeatchs, BaseExtractor
-from pager.page_model.sub_models import ImageToWordsAndCNNStyles, PDFToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
-from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks
+from pager.page_model.sub_models.converters import Image2WordsAndStyles, PDF2WordsAndStyles
+from pager.page_model.sub_models import PhisicalModel, WordsAndStylesToGLAMBlocks,WordsAndStylesToSpGraph4N
 from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
-from pager.page_model.sub_models.dtype import ImageSegment, StyleWord
+from pager.page_model.sub_models.dtype import ImageSegment, Word
+from pager.page_model.sub_models.converters import PDF2Img
 import numpy as np
 import os
 from dotenv import load_dotenv
@@ -57,9 +58,19 @@ def nodes_feature(styles, words):
     for st in styles:
         fonts[st['id']] = st['font2vec']
     style_vec = np.array([fonts[w['style_id']] for w in words])
-    text_vec = ws2g_converter.word2vec([w['content'] for w in words])
+    text_vec = ws2g_converter.word2vec([w['text'] for w in words])
 
     nodes_feature = np.concat([style_vec, text_vec], axis=1)
+    return [nodes_feature.tolist()]
+
+def nodes_feature_new_styles(styles, words, nodes_feature):
+    fonts = dict()
+    
+    for st in styles:
+        fonts[st['id']] = st['font2vec']
+    style_vec = np.array([fonts[w['style_id']] for w in words])
+    rez = np.array(nodes_feature)
+    nodes_feature = np.concat([style_vec, rez[:, -32:]], axis=1)
     return [nodes_feature.tolist()]
 
 def edges_feature(A, words):
@@ -72,15 +83,11 @@ def edges_feature(A, words):
     return [edges_featch]
       
 
-unit_image = PageModelUnit(id="image", 
-                               sub_model=ImageModel(), 
-                               converters={}, 
-                               extractors=[])
-    
+
 conf_words_and_styles = {"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3,"onetone_delete": True, "k": 4 }
 unit_words_and_styles = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
-                            converters={"image": ImageToWordsAndCNNStyles(conf_words_and_styles)}, 
+                            converters={"image": Image2WordsAndStyles(conf_words_and_styles)}, 
                             extractors=[])
 
 
@@ -89,10 +96,16 @@ unit_pdf = PageModelUnit(id="pdf",
                                converters={}, 
                                extractors=[])
 
+# unit_image = PageModelUnit(id="image", 
+#                                sub_model=ImageModel(), 
+#                                converters={PDF2Img()}, 
+#                                extractors=[])
+    
+
 unit_words_and_styles_pdf = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
-                            converters={"pdf": PDFToWordsAndCNNStyles()}, 
-                            extractors=[])
+                            converters={"pdf": PDF2WordsAndStyles(conf_words_and_styles)}, 
+                            extractors=[])                                       
 
 unit_words_and_styles_start = PageModelUnit(id="words_and_styles", 
                             sub_model=WordsAndStylesModel(), 
@@ -106,6 +119,7 @@ unit_graph = PageModelUnit(id="graph",
                             converters={"words_and_styles":  ws2g_converter})
 img2words_and_styles = PageModel(page_units=[
     unit_pdf, 
+    # unit_image,
     unit_words_and_styles_pdf
 ]) # На самом деле pdf2words_and_styles
 
@@ -142,7 +156,7 @@ class Json2Blocks(WordsAndStylesToGLAMBlocks):
             "nodes_feature": input_model.json["nodes_feature"], 
             "edges_feature": input_model.json["edges_feature"]
         } 
-        words = [StyleWord(w) for w in input_model.json["words"]]
+        words = [Word(w) for w in input_model.json["words"]]
         self.set_output_block(output_model, words, graph)
 
 def get_img2phis(conf):
