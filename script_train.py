@@ -133,6 +133,10 @@ def get_tensor_from_graph(graph):
     sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32).to(device)
     E_true = torch.tensor(data=v_true, dtype=torch.float32).to(device)
     N_true = torch.tensor(data=n_true, dtype=torch.float32).to(device)
+    if X.shape[1] != PARAMS["node_featch"]:
+        X = []
+    if Y.shape[1] != PARAMS["edge_featch"]:
+        X = []
     return X, Y, sp_A, E_true, N_true, i
 
 def validation(models, dataset, criterion):
