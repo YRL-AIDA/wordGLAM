@@ -14,7 +14,10 @@ from pager.page_model.sub_models.dtype import ImageSegment, Word
 from pager.page_model.sub_models.converters import PDF2Img, PDF2OnlyFigBlocks
 import numpy as np
 import os
+from typing import List
+import torch
 import re
+from .torch_model import TorchModel
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -259,8 +262,51 @@ class JsonWithFeatchsWithRead(JsonWithFeatchs):
     def read_from_file(self, path_file):
         self.name_file = path_file
         return super().from_dict({})
+
+
+def get_tensor_from_graph(graph):
+    i = graph["A"]
+    v_in = [1 for e in graph["edges_feature"]]
+    y = graph["edges_feature"]
+    x = graph["nodes_feature"]
+    N = len(x)
     
+    X = torch.tensor(data=x, dtype=torch.float32)
+    Y = torch.tensor(data=y, dtype=torch.float32)
+    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32)
+    return X, Y, sp_A, i
 class Json2Blocks(WordsAndStylesToGLAMBlocks):
+    def __init__(self, conf):
+        params = {
+            "H1": conf["H1"],
+            "H2": conf["H2"],
+            "node_featch": conf["node_featch"],
+            "edge_featch": conf["edge_featch"],
+            "path_model": conf["path_model"],
+        }
+        self.seg_k = conf['seg_k'] if "seg_k" in conf.keys() else 0.5
+        self.spgraph = SpGraph4NModel()
+        self.graph_converter = WordsAndStylesToSpGraph4N({"with_text": True})
+        
+        self.name_class = ["figure", "text", "header", "list", "table"]
+        self.model = TorchModel(params)
+        self.model.load_state_dict(torch.load(params['path_model'], weights_only=True, map_location=torch.device('cpu')))
+    
+    def segmenter(self, graph) -> List[int]:
+        X, Y, sp_A, i = get_tensor_from_graph(graph)
+        N = X.shape[0]
+        if len(i[0]) == 0:
+            self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0] for _ in range(N)])
+            return np.array([])
+        if N == 1:
+            self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0]])
+            return np.array([0 for _ in i[0]])
+        Node_class, E_pred = self.model(X, Y, sp_A, i)
+        rez = np.zeros_like(E_pred.detach().numpy())
+        self.tmp = Node_class.detach().numpy()
+        rez[E_pred>0.5] = 1
+        return rez
+
     def convert(self, input_model: JsonWithFeatchs, output_model: PhisicalModel):
         graph = {
             "A": input_model.json["A"], 
