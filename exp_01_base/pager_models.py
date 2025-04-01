@@ -224,7 +224,7 @@ unit_words_and_styles_start = PageModelUnit(id="words_and_styles",
                             converters={}, 
                             extractors=[])
 conf_graph = {"with_text": True} if WITH_TEXT else None
-ws2g_converter=WordsAndStylesToSpDelaunayGraph(conf_graph) if TYPE_GRAPH == "Delaunay" else WordsAndStylesToSpGraph4N(conf_graph)
+ws2g_converter=WordsAndStylesToSpDelaunayGraph(conf_graph) if TYPE_GRAPH == "Delaunay" else WordsAndStylesToSpGraph4N(conf_graph, add_text=False) # TEXT не надо два раза обрабатывать
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
                             extractors=[],  
@@ -248,13 +248,10 @@ class JsonWithFeatchsExtractor(BaseExtractor):
     def extract(self, json_with_featchs: JsonWithFeatchs):
         json_with_featchs.add_featchs(lambda: featch_words_and_styles(json_with_featchs.name_file), names=['styles', 'words'], 
                             is_reupdate=False, rewrite=False)
-        
         json_with_featchs.add_featchs(lambda: featch_A(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['A'], 
                             is_reupdate=False, rewrite=False)
-        
         json_with_featchs.add_featchs(lambda: nodes_feature(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['nodes_feature'], 
                             is_reupdate=False, rewrite=False) 
-        
         json_with_featchs.add_featchs(lambda: edges_feature(json_with_featchs.json['A'], json_with_featchs.json['words']), names=['edges_feature'], 
                             is_reupdate=False, rewrite=False) 
 
@@ -276,37 +273,6 @@ def get_tensor_from_graph(graph):
     sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32)
     return X, Y, sp_A, i
 class Json2Blocks(WordsAndStylesToGLAMBlocks):
-    def __init__(self, conf):
-        params = {
-            "H1": conf["H1"],
-            "H2": conf["H2"],
-            "node_featch": conf["node_featch"],
-            "edge_featch": conf["edge_featch"],
-            "path_model": conf["path_model"],
-        }
-        self.seg_k = conf['seg_k'] if "seg_k" in conf.keys() else 0.5
-        self.spgraph = SpGraph4NModel()
-        self.graph_converter = WordsAndStylesToSpGraph4N({"with_text": True})
-        
-        self.name_class = ["figure", "text", "header", "list", "table"]
-        self.model = TorchModel(params)
-        self.model.load_state_dict(torch.load(params['path_model'], weights_only=True, map_location=torch.device('cpu')))
-    
-    def segmenter(self, graph) -> List[int]:
-        X, Y, sp_A, i = get_tensor_from_graph(graph)
-        N = X.shape[0]
-        if len(i[0]) == 0:
-            self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0] for _ in range(N)])
-            return np.array([])
-        if N == 1:
-            self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0]])
-            return np.array([0 for _ in i[0]])
-        Node_class, E_pred = self.model(X, Y, sp_A, i)
-        rez = np.zeros_like(E_pred.detach().numpy())
-        self.tmp = Node_class.detach().numpy()
-        rez[E_pred>0.5] = 1
-        return rez
-
     def convert(self, input_model: JsonWithFeatchs, output_model: PhisicalModel):
         graph = {
             "A": input_model.json["A"], 
