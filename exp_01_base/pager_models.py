@@ -224,7 +224,7 @@ unit_words_and_styles_start = PageModelUnit(id="words_and_styles",
                             converters={}, 
                             extractors=[])
 conf_graph = {"with_text": True} if WITH_TEXT else None
-ws2g_converter=WordsAndStylesToSpDelaunayGraph(conf_graph) if TYPE_GRAPH == "Delaunay" else WordsAndStylesToSpGraph4N(conf_graph, add_text=False) # TEXT не надо два раза обрабатывать
+ws2g_converter=WordsAndStylesToSpDelaunayGraph(conf_graph, add_text=False) if TYPE_GRAPH == "Delaunay" else WordsAndStylesToSpGraph4N(conf_graph, add_text=False) # TEXT не надо два раза обрабатывать
 unit_graph = PageModelUnit(id="graph", 
                             sub_model=SpGraph4NModel(), 
                             extractors=[],  
