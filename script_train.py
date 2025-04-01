@@ -208,7 +208,7 @@ def log(str_):
         f.write(str_)
 
 if __name__ == "__main__":
-    is_restart = True
+    is_restart = False
     restart_num = None
     dataset = GLAMDataset(PATH_GRAPHS_JSONS)
     import datetime
