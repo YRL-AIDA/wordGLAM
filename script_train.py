@@ -18,8 +18,45 @@ device = torch.device('cpu')
 class GLAMDataset(Dataset):
     def __init__(self, json_dir):
         self.json_dir = json_dir
-        self.files = sorted(os.listdir(self.json_dir))
+        files  = sorted(os.listdir(self.json_dir))
+        print("TEST OPEN FILE:")
+        json_error = []
+        key_error = []
+        N = len(files)
+        for i, file in enumerate(files):
+            print(f"{i+1}/{N} ({(i+1)/N*100:.2f} %)" + " "*10, end="\r")
+            try:
+                path = os.path.join(self.json_dir, file)
+                with open(path, "r") as f: 
+                    j = json.load(f)
+                for k in ["nodes_feature", "edges_feature", "true_edges", "true_nodes"]:                    
+                    if not k in j:
+                        key_error.append(i)
+                        raise KeyError(f"{k} not in {file}")
+            except:
+                json_error.append(i)
+        
+        if len(key_error) != 0:
+            print("KEY ERROR FILES:")
+            log("KEY ERROR FILES:"+"\n")
+            for i in key_error:
+                print(files[i])
+                log(files[i]+ '\n')
+
+        if len(json_error) != 0:
+            print("JSON ERROR FILES:")
+            log("JSON ERROR FILES:"+"\n")
+            for i in json_error:
+                print(files[i])
+                log(files[i]+"\n")
+
+        for i in sorted(key_error + json_error, reverse=True):
+            del files[i]
+
+        self.files = files
         self.count = len(self.files)
+
+        
 
     def __len__(self):
         return self.count
