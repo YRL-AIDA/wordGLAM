@@ -81,7 +81,7 @@ def get_tensor_from_graph(graph):
         return rez
     delete_error_nodes(graph)
     i = graph["A"]
-    v_in = [1 for e in graph["edges_feature"]]
+    # v_in = [1 for e in graph["edges_feature"]]
     y = graph["edges_feature"]
 
     v_true = graph["true_edges"]
@@ -91,7 +91,11 @@ def get_tensor_from_graph(graph):
     
     X = torch.tensor(data=x, dtype=torch.float32).to(device)
     Y = torch.tensor(data=y, dtype=torch.float32).to(device)
-    sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32).to(device)
+    j_down = [[i1, i0] for i0, i1 in zip(i[0], i[1]) if i0 != i1]
+    sp_indices = [i[0] + [j[0] for j in j_down ],
+                 i[1] + [j[1] for j in j_down ]]
+    sp_values = [1 for e in sp_indices[0]]
+    sp_A = torch.sparse_coo_tensor(indices=sp_indices, values=sp_values, size=(N, N), dtype=torch.float32).to(device)
     E_true = torch.tensor(data=v_true, dtype=torch.float32).to(device)
     N_true = torch.tensor(data=n_true, dtype=torch.float32).to(device)
     if len(X.shape) != 2 or X.shape[1] != PARAMS["node_featch"]:
@@ -159,7 +163,7 @@ def train_model(params, model, dataset, save_frequency=5, start_epoch=0):
     criterion.to(device)
 
     loss_list = []
-    
+    start = time.time()
     train_dataset, val_dataset = split_index_train_val(dataset, val_split=0.1, batch_size=params["batch_size"])
     for k in range(start_epoch, params["epochs"]):
         my_loss_list = []

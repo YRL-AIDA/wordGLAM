@@ -28,7 +28,7 @@ TYPE_GRAPH = "4N"
 EXPERIMENT_PARAMS = {
     "node_featch": 47,
     "edge_featch": 2,
-    "epochs": 10,
+    "epochs": 30,
     "batch_size": 20,
     "learning_rate": 0.005,
     "H1": [256, 128, 64, 64, 32, 32, 32, 16, 16, 8],

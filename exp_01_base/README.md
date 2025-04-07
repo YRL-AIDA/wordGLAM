@@ -5,7 +5,7 @@
     - BERT-word (32 координаты)
     
 2) batch=512, 
-3) 2 TAGConv (k=1), 
+3) 3 TAGConv (k=1), 
 4) balans edges class,
 5) batch_norm, 
 6) pdf

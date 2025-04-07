@@ -10,6 +10,6 @@ def start_new_exp(name):
 
     subprocess.run(["python", "script_train.py"])
 
-
+start_new_exp("exp_01_base")
 start_new_exp("exp_02_3convTag")
 start_new_exp("exp_03_4convTag")
