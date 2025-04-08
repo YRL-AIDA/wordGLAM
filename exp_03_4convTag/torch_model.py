@@ -83,9 +83,10 @@ class CustomLoss(torch.nn.Module):
         self.bce = BCEWithLogitsLoss(pos_weight=torch.tensor(params['edge_imbalance']))
         self.ce = CrossEntropyLoss(weight=torch.tensor(params['publaynet_imbalance']))
         self.edge_coef:float = params['edge_coef']
+        self.node_coef:float = params['node_coef']
 
     def forward(self, n_pred, n_true, e_pred, e_true):
-        loss = self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true)
+        loss = self.node_coef*self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true)
         return loss
 
 class TorchModel(torch.nn.Module):

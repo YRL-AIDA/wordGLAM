@@ -46,7 +46,8 @@ EDGE_COEF = float(os.environ["EDGE_COEF"])
 LOSS_PARAMS = {
     "publaynet_imbalance": PUBLAYNET_IMBALANCE,
     "edge_imbalance": EDGE_IMBALANCE,
-    "edge_coef": EDGE_COEF
+    "edge_coef": EDGE_COEF,
+    "node_coef": NODE_COEF,
 }
 PARAMS["loss_params"] = LOSS_PARAMS
 
