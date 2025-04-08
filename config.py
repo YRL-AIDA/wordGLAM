@@ -42,6 +42,7 @@ SAVE_FREQUENCY = int(os.environ["SAVE_FREQUENCY"])
 PUBLAYNET_IMBALANCE = [float(num) for num in os.environ["PUBLAYNET_IMBALANCE"][1:-1].split(',')]
 EDGE_IMBALANCE = float(os.environ["EDGE_IMBALANCE"])
 EDGE_COEF = float(os.environ["EDGE_COEF"])
+NODE_COEF = float(os.environ["NODE_COEF"])
 
 LOSS_PARAMS = {
     "publaynet_imbalance": PUBLAYNET_IMBALANCE,
