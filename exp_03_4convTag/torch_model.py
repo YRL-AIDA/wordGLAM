@@ -73,7 +73,7 @@ class EdgeGLAM(torch.nn.Module):
         h = self.linear1(x)
         h = self.activation(h)
         h = self.linear2(h)
-        # h = torch.sigmoid(h)
+        h = torch.sigmoid(h)
         return torch.squeeze(h, 1)
 
 class CustomLoss(torch.nn.Module):
