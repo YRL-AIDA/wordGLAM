@@ -19,40 +19,48 @@ class GLAMDataset(Dataset):
     def __init__(self, json_dir):
         self.json_dir = json_dir
         files  = sorted(os.listdir(self.json_dir))
-        print("TEST OPEN FILE:")
-        json_error = []
-        key_error = []
-        N = len(files)
-        for i, file in enumerate(files):
-            print(f"{i+1}/{N} ({(i+1)/N*100:.2f} %)" + " "*10, end="\r")
-            try:
-                path = os.path.join(self.json_dir, file)
-                with open(path, "r") as f: 
-                    j = json.load(f)
-                for k in ["nodes_feature", "edges_feature", "true_edges", "true_nodes"]:                    
-                    if not k in j:
-                        key_error.append(i)
-                        raise KeyError(f"{k} not in {file}")
-            except:
-                json_error.append(i)
-        
-        if len(key_error) != 0:
-            print("KEY ERROR FILES:")
-            log("KEY ERROR FILES:"+"\n")
-            for i in key_error:
-                print(files[i])
-                log(files[i]+ '\n')
 
-        if len(json_error) != 0:
-            print("JSON ERROR FILES:")
-            log("JSON ERROR FILES:"+"\n")
-            for i in json_error:
-                print(files[i])
-                log(files[i]+"\n")
+        if os.path.exists("error_list_file.txt"):
+            with open("error_list_file.txt", "r") as f:
+                lines = f.readlines()
+            error_file = [int(line.split(" ")[0]) for line in lines]
+        else:       
+            print("TEST OPEN FILE:")
+            json_error = []
+            key_error = []
+            N = len(files)
+            for i, file in enumerate(files):
+                print(f"{i+1}/{N} ({(i+1)/N*100:.2f} %)" + " "*10, end="\r")
+                try:
+                    path = os.path.join(self.json_dir, file)
+                    with open(path, "r") as f: 
+                        j = json.load(f)
+                    for k in ["nodes_feature", "edges_feature", "true_edges", "true_nodes"]:                    
+                        if not k in j:
+                            key_error.append(i)
+                            raise KeyError(f"{k} not in {file}")
+                except:
+                    json_error.append(i)
+            
+            if len(key_error) != 0:
+                print("KEY ERROR FILES:")
+                log("KEY ERROR FILES:"+"\n")
+                for i in key_error:
+                    print(files[i])
+                    log(files[i]+ '\n')
 
-        for i in sorted(key_error + json_error, reverse=True):
+            if len(json_error) != 0:
+                print("JSON ERROR FILES:")
+                log("JSON ERROR FILES:"+"\n")
+                for i in json_error:
+                    print(files[i])
+                    log(files[i]+"\n")
+            error_file = sorted(key_error + json_error, reverse=True)
+            with open("error_list_file.txt", "w") as f:
+                for i in error_file:
+                    f.write(str(i) + " "+ files[i] + '\n')
+        for i in error_file:
             del files[i]
-
         self.files = files
         self.count = len(self.files)
 
@@ -141,18 +149,14 @@ def get_tensor_from_graph(graph):
         X = []
     return X, Y, sp_A, E_true, N_true, i
 
-def validation(model, dataset, criterion):
-    my_loss_list = []
-    for batch in dataset:
-        rez = step(model, batch, optimizer=None, criterion=criterion, train=False)
-        my_loss_list.append(rez)
-        
-    return np.mean(my_loss_list)
+def validation(model, batch, criterion):     
+    return step(model, batch, optimizer=None, criterion=criterion, train=False)
 
 
 def split_index_train_val(dataset, val_split=0.2, shuffle=True, seed=1234,batch_size=64):
     N = len(dataset)
     count_batchs = int(N*(1-val_split))//batch_size
+    count_val_batch = int(N*(val_split))//batch_size
     train_size = count_batchs * batch_size 
     indexs = [i for i in range(N)]
     if shuffle:
@@ -160,7 +164,8 @@ def split_index_train_val(dataset, val_split=0.2, shuffle=True, seed=1234,batch_
     train_indexs = indexs[:train_size]
     val_indexs = indexs[train_size:]
     batchs_train_indexs = [[train_indexs[k*batch_size+i] for i in range(batch_size)] for k in range(count_batchs)]
-    return batchs_train_indexs, val_indexs    
+    batchs_val_indexs = [[val_indexs[k*batch_size+i] for i in range(batch_size)] for k in range(count_val_batch)]
+    return batchs_train_indexs, batchs_val_indexs    
 
 def step(model: torch.nn.Module, batch, optimizer, criterion, train=True):
     if train:
@@ -215,8 +220,14 @@ def train_model(params, model, dataset, save_frequency=5, start_epoch=0):
                 print(f"Время обучения batch'а {time.time()-start:.2f} сек")
         train_val = np.mean(my_loss_list)
         loss_list.append(train_val)
-        batchs = [[dataset[ind] for ind in val_dataset]]
-        validation_val = validation(model, batchs, criterion)
+
+        my_loss_list = []
+        for l, batch_indexs in enumerate(val_dataset):
+            batch = [dataset[ind] for ind in batch_indexs]
+            batch_loss = validation(model, batch, criterion)
+            my_loss_list.append(batch_loss)
+            print(f"Batch # {l+1} loss={my_loss_list[-1]:.4f}" + " "*40)
+        validation_val =  np.mean(my_loss_list)
         print("="*10, f"EPOCH #{k+1}","="*10, f"({train_val:.4f}/{validation_val:.4f})")
         if k == start_epoch:
             print(f"Время обучения epoch {time.time()-start:.2f} сек")    
