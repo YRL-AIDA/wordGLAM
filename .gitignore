@@ -172,3 +172,5 @@ cython_debug/
 .pypirc
 *log.txt
 .env
+error_list_file.txt
+glam_model

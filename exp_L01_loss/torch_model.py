@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU, HuberLoss
+from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU
 from torch.nn.functional import relu
 from torch_geometric.nn import BatchNorm, TAGConv
 from typing import List
@@ -70,7 +70,7 @@ class CustomLoss(torch.nn.Module):
         self.node_coef:float = params['node_coef']
 
     def forward(self, n_pred, n_true, e_pred, e_true):
-        loss = self.node_coef*self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true)
+        loss = self.node_coef*self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true) + 0.1*(0.87 * torch.max(torch.abs(e_pred-e_true)*(1-e_true))+ 0.13 * torch.max(torch.abs(e_pred-e_true)*(e_true)))
         return loss
 
 class TorchModel(torch.nn.Module):

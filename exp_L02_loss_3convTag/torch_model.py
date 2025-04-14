@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU, HuberLoss
+from torch.nn import Linear, BCELoss, BCEWithLogitsLoss, CrossEntropyLoss, GELU
 from torch.nn.functional import relu
 from torch_geometric.nn import BatchNorm, TAGConv
 from typing import List
@@ -17,9 +17,12 @@ class NodeGLAM(torch.nn.Module):
         self.linear2 = Linear(h[1], h[2]) 
         self.tag2 = TAGConv(h[2], h[3])
 
-        self.linear5 = Linear(h[3] +input_, h[4])
-        self.linear6 =Linear(h[4], h[5])
-        self.classifer = Linear(h[5], output_)
+        self.linear3 = Linear(h[3], h[4]) 
+        self.tag3 = TAGConv(h[4], h[5])
+
+        self.linear5 = Linear(h[5] +input_, h[6])
+        self.linear6 =Linear(h[6], h[7])
+        self.classifer = Linear(h[7], output_)
 
     
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
@@ -33,6 +36,11 @@ class NodeGLAM(torch.nn.Module):
         h = self.linear2(h)
         h = self.activation(h)
         h = self.tag2(h, edge_index)
+        h = self.activation(h)
+
+        h = self.linear3(h)
+        h = self.activation(h)
+        h = self.tag3(h, edge_index)
         h = self.activation(h)
 
         a = torch.cat([x, h], dim=1)
@@ -70,7 +78,10 @@ class CustomLoss(torch.nn.Module):
         self.node_coef:float = params['node_coef']
 
     def forward(self, n_pred, n_true, e_pred, e_true):
-        loss = self.node_coef*self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true)
+        node_loss = self.node_coef*self.ce(n_pred, n_true)
+        edge_loss = self.edge_coef*self.bce(e_pred, e_true)
+        penalty = (0.87 * torch.max(torch.abs(e_pred-e_true)*(1-e_true))+ 0.13 * torch.max(torch.abs(e_pred-e_true)*(e_true)))
+        loss = node_loss + edge_loss + 0.1*penalty
         return loss
 
 class TorchModel(torch.nn.Module):

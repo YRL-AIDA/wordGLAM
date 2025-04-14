@@ -5,13 +5,7 @@
     - BERT-word (32 координаты)
     
 2) batch=512, 
-3) 4 TAGConv (k=1), 
+3) 2 TAGConv (k=4), 
 4) balans edges class,
 5) batch_norm, 
 6) pdf
-
----------------1000 file ----------------
-EPOCH #29	 0.45295321 (VAL: 0.46597558)
-F1 (IoU=0.50):  0.31861804
-F1 (IoU=0.95):  0.12923864
-mAP@IoU[0.50:0.95] = 0.02717345

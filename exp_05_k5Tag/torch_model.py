@@ -12,10 +12,10 @@ class NodeGLAM(torch.nn.Module):
         self.batch_norm1 = BatchNorm(input_)
 
         self.linear1 = Linear(input_, h[0]) 
-        self.tag1 = TAGConv(h[0], h[1])
+        self.tag1 = TAGConv(h[0], h[1], K=5)
 
         self.linear2 = Linear(h[1], h[2]) 
-        self.tag2 = TAGConv(h[2], h[3])
+        self.tag2 = TAGConv(h[2], h[3], K=5)
 
         self.linear5 = Linear(h[3] +input_, h[4])
         self.linear6 =Linear(h[4], h[5])
