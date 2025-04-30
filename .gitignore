@@ -173,4 +173,4 @@ cython_debug/
 *log.txt
 .env
 error_list_file.txt
-glam_model
+*glam_model*
