@@ -36,10 +36,11 @@ EXPERIMENT_PARAMS = {
     "epochs": 30,
     "batch_size": 80,
     "learning_rate": 0.005,
-    "Tag": [{"in":-1, "size": 256, "out":128}, 
-            {"in":128, "size": 64, "out":32}],
+    "Tag": [{"in":-1, "size": 256, "out":128, "k":5}, 
+            {"in":128, "size": 64, "out":32, "k":5}],
     "NodeLinear": [-1, 16, 8],
     "EdgeLinear": [8],
+    "NodeClasses": 5,
     "seg_k": 0.5
 }
 
