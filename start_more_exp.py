@@ -1,15 +1,10 @@
 import subprocess
 
 def start_new_exp(name):
-    with open ('.env', 'r') as f:
-        old_data = f.read()
-    new_data = "\n".join([f'EXPERIMENT="{name}"']+old_data.split("\n")[1:])
-    with open ('.env', 'w') as f:
-        f.write(new_data)
-    
+    subprocess.run(["python", f"{name}/start_more_exp.py"])
 
-    subprocess.run(["python", "script_train.py"])
-
-start_new_exp("exp_01_base")
-start_new_exp("exp_02_3convTag")
-start_new_exp("exp_03_4convTag")
+start_new_exp("exp_01_balans")
+start_new_exp("exp_02_complex_loss")
+start_new_exp("exp_03_countTag")
+start_new_exp("exp_04_kTag")
+start_new_exp("exp_05_batchNorm")

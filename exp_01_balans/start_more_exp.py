@@ -13,3 +13,4 @@ def start_new_exp(name, header="exp_01_balans"):
 
 start_new_exp("01_no")
 start_new_exp("02_yes")
+start_new_exp("03_heuristics")

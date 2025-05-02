@@ -41,6 +41,8 @@ EXPERIMENT_PARAMS = {
     "NodeLinear": [-1, 16, 8],
     "EdgeLinear": [8],
     "NodeClasses": 5,
+    "batchNormNode": True,
+    "batchNormEdge": True,
     "seg_k": 0.5
 }
 
@@ -304,9 +306,10 @@ class Json2Blocks(WordsAndStylesToGLAMBlocks):
             self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0]])
             return np.array([0 for _ in i[0]])
         Node_class, E_pred = self.model(X, Y, sp_A, i)
-        rez = np.zeros_like(E_pred.detach().numpy())
+        self.tmp_edge = E_pred.detach().numpy()
+        rez = np.zeros_like(self.tmp_edge)
         self.tmp = Node_class.detach().numpy()
-        rez[E_pred>0.5] = 1
+        rez[self.tmp_edge>0.5] = 1
         return rez
 
     def convert(self, input_model: JsonWithFeatchs, output_model: PhisicalModel):

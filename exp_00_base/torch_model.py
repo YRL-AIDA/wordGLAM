@@ -27,6 +27,7 @@ class NodeGLAM(torch.nn.Module):
         super(NodeGLAM, self).__init__()
 
         self.activation = GELU()
+        self.has_bathcnorm = params['batchNormNode'] if 'batchNormNode' in params.keys() else True
         self.batch_norm1 = BatchNorm(params['node_featch'])
 
         tags = params['Tag']
@@ -43,7 +44,8 @@ class NodeGLAM(torch.nn.Module):
 
     
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-        x = self.batch_norm1(x)
+        if self.has_bathcnorm:
+            x = self.batch_norm1(x)
         h = x
         for layer in self.Tag:
             h = layer(h, edge_index)
@@ -56,15 +58,20 @@ class NodeGLAM(torch.nn.Module):
         return a, cl
 
 class EdgeGLAM(torch.nn.Module):
-    def __init__(self, input_, h, output_):
+    def __init__(self, params):
         super(EdgeGLAM, self).__init__()
+        input_  = 2*params["node_featch"]+2*params["NodeLinear"][-1] + params["edge_featch"]
+        h = params["EdgeLinear"]
+        output_ = 1
         self.activation = GELU()
+        self.has_bathcnorm = params['batchNormEdge'] if 'batchNormEdge' in params.keys() else True
         self.batch_norm2 = BatchNorm(input_, output_)
         self.linear1 = Linear(input_, h[0]) 
         self.linear2 = Linear(h[0], output_)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.batch_norm2(x)
+        if self.has_bathcnorm:
+            x = self.batch_norm2(x)
         h = self.linear1(x)
         h = self.activation(h)
         h = self.linear2(h)
@@ -89,7 +96,7 @@ class TorchModel(torch.nn.Module):
     def __init__(self, params):
         super(TorchModel, self).__init__()
         self.node_emb = NodeGLAM(params)
-        self.bin_edge_emb = EdgeGLAM(2*params["node_featch"]+2*params["NodeLinear"][-1] + params["edge_featch"], params["EdgeLinear"], 1)
+        self.bin_edge_emb = EdgeGLAM(params)
 
     def forward(self, X: torch.Tensor, Y: torch.Tensor, sp_A: torch.Tensor, i:List[int]):
         Node_emb, Node_class = self.node_emb(X, sp_A)

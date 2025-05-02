@@ -12,5 +12,5 @@ def start_new_exp(name, header="exp_02_complex_loss"):
     subprocess.run(["python", "script_test.py"])
 
 
-for coef in ['03_050', '04_075', '05_095']:#['01_005', '02_025', '03_050', '04_075', '05_095']:
+for coef in ['01_005', '02_025', '03_050', '04_075', '05_095']:
     start_new_exp(coef)

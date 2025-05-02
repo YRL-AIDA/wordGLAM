@@ -13,7 +13,8 @@ from config import TorchModel, CustomLoss
 device = torch.device('cuda:0' if torch.cuda.device_count() != 0 else 'cpu')
 SKIP_INDEX = []
 device = torch.device('cpu')
-
+torch.manual_seed(seed=1234)
+np.random.seed(1234)
 
 class GLAMDataset(Dataset):
     def __init__(self, json_dir):
@@ -44,17 +45,17 @@ class GLAMDataset(Dataset):
             
             if len(key_error) != 0:
                 print("KEY ERROR FILES:")
-                log("KEY ERROR FILES:"+"\n")
+                log("KEY ERROR FILES:")
                 for i in key_error:
                     print(files[i])
-                    log(files[i]+ '\n')
+                    log(files[i])
 
             if len(json_error) != 0:
                 print("JSON ERROR FILES:")
-                log("JSON ERROR FILES:"+"\n")
+                log("JSON ERROR FILES:")
                 for i in json_error:
                     print(files[i])
-                    log(files[i]+"\n")
+                    log(files[i])
             error_file = sorted(key_error + json_error, reverse=True)
             with open("error_list_file.txt", "w") as f:
                 for i in error_file:
@@ -232,7 +233,7 @@ def train_model(params, model, dataset, save_frequency=5, start_epoch=0):
         if k == start_epoch:
             print(f"Время обучения epoch {time.time()-start:.2f} сек")    
             
-        log(f"EPOCH #{k}\t {train_val:.8f} (VAL: {validation_val:.8f})\n")  
+        log(f"EPOCH #{k}\t {train_val:.8f} (VAL: {validation_val:.8f})")  
         if (k+1) % save_frequency == 0:
             num = k//save_frequency
             torch.save(model.state_dict(), GLAM_MODEL+f"_tmp_{num}")
@@ -257,7 +258,7 @@ def load_checkpoint(model, path_model,restart_num=None):
 
 def log(str_):
     with open(LOG_FILE, 'a') as f:
-        f.write(str_)
+        f.write(str_+'\n')
 
 if __name__ == "__main__":
     is_restart = False
@@ -266,7 +267,7 @@ if __name__ == "__main__":
     import datetime
     if is_restart:
         log("R E S T A R T ")
-    log(datetime.datetime.now().__str__()+ '\n')
+    log(datetime.datetime.now().__str__())
     try:
         str_ = dataset.__str__()
         str_ += '\n'.join(f"{key}:\t{val}" for key, val in PARAMS.items())
