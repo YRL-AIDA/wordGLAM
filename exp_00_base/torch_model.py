@@ -65,6 +65,7 @@ class EdgeGLAM(torch.nn.Module):
         output_ = 1
         self.activation = GELU()
         self.has_bathcnorm = params['batchNormEdge'] if 'batchNormEdge' in params.keys() else True
+        self.has_sigmoid = params['sigmoidEdge'] if 'sigmoidEdge' in params.keys() else False
         self.batch_norm2 = BatchNorm(input_, output_)
         self.linear1 = Linear(input_, h[0]) 
         self.linear2 = Linear(h[0], output_)
@@ -75,13 +76,14 @@ class EdgeGLAM(torch.nn.Module):
         h = self.linear1(x)
         h = self.activation(h)
         h = self.linear2(h)
-        h = torch.sigmoid(h)
+        if self.has_sigmoid:
+            h = torch.sigmoid(h)
         return torch.squeeze(h, 1)
 
 class CustomLoss(torch.nn.Module):
     def __init__(self, params):
         super(CustomLoss, self).__init__()
-                    #BCELoss
+                    #BCEWithLogitsLoss
         self.bce = BCEWithLogitsLoss(pos_weight=torch.tensor(params['edge_imbalance']))
         self.ce = CrossEntropyLoss(weight=torch.tensor(params['publaynet_imbalance']))
         self.edge_coef:float = params['edge_coef']

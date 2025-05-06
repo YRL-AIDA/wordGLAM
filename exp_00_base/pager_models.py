@@ -25,8 +25,8 @@ PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
 
 PUBLAYNET_IMBALANCE=[2.63, 0.015, 0.946, 1.268, 0.136]
 EDGE_IMBALANCE=0.14
-EDGE_COEF=0.5
-NODE_COEF=0.5
+EDGE_COEF=0.25
+NODE_COEF=0.75
 
 WITH_TEXT = True
 TYPE_GRAPH = "4N"
@@ -36,8 +36,10 @@ EXPERIMENT_PARAMS = {
     "epochs": 30,
     "batch_size": 80,
     "learning_rate": 0.005,
-    "Tag": [{"in":-1, "size": 256, "out":128, "k":5}, 
-            {"in":128, "size": 64, "out":32, "k":5}],
+    "Tag": [{"in":-1, "size": 256, "out":128, "k":6}, 
+            {"in":128, "size": 128, "out":128, "k":6},
+            {"in":128, "size": 128, "out":128, "k":6},
+            {"in":128, "size": 64, "out":32, "k":6}],
     "NodeLinear": [-1, 16, 8],
     "EdgeLinear": [8],
     "NodeClasses": 5,
@@ -322,6 +324,7 @@ class Json2Blocks(WordsAndStylesToGLAMBlocks):
         self.set_output_block(output_model, words, graph)
 
 def get_img2phis(conf):
+    conf['sigmoidEdge'] = True
     json_model = PageModelUnit(id="json_model", 
                         sub_model=JsonWithFeatchsWithRead(), 
                         extractors=[JsonWithFeatchsExtractor()],
