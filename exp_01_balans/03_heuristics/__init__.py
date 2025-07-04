@@ -9,4 +9,6 @@ PUBLAYNET_IMBALANCE = [
     1.00, #list - списки чуть больше заголовков, но редкие
     0.89   #table - таблицы редкие, но чаще списков
 ]
-EDGE_IMBALANCE = 0.2
+
+EXPERIMENT_PARAMS["loss_params"]["publaynet_imbalance"] =PUBLAYNET_IMBALANCE
+EXPERIMENT_PARAMS["loss_params"]["edge_imbalance"] = 0.2

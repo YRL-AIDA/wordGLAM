@@ -11,6 +11,7 @@ LABELS = {
     
 def create_jsons_publaynet():
     if  os.path.exists(PATH_GRAPHS_JSONS):  
+        print(f"DIR EXISTS {PATH_GRAPHS_JSONS}")
         return  
     with open(os.path.join(PATH_PUBLAYNET, "train.json"), "r") as f:
         dataset = json.load(f)
@@ -54,6 +55,7 @@ def create_jsons_publaynet():
 
 if __name__ == "__main__":   
     # Первый шаг, получаем информацию из картинок и разметки PubLayNet
+    print("create jsons")
     create_jsons_publaynet()
     
     

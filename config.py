@@ -44,23 +44,6 @@ LOG_FILE = os.path.join(EXPERIMENT, "log.txt")
 PARAMS = exp.EXPERIMENT_PARAMS
 SAVE_FREQUENCY = int(os.environ["SAVE_FREQUENCY"])
 
-
-
-PUBLAYNET_IMBALANCE = exp.PUBLAYNET_IMBALANCE
-EDGE_IMBALANCE = exp.EDGE_IMBALANCE 
-EDGE_COEF = exp.EDGE_COEF 
-NODE_COEF = exp.NODE_COEF
-
-
-LOSS_PARAMS = {
-    "publaynet_imbalance": PUBLAYNET_IMBALANCE,
-    "edge_imbalance": EDGE_IMBALANCE,
-    "edge_coef": EDGE_COEF,
-    "node_coef": NODE_COEF,
-}
-PARAMS["loss_params"] = LOSS_PARAMS
-
-
 extract = exp.extract
 
 def get_preprocessing_models():

@@ -51,7 +51,9 @@ def extract(path_dataset, path_img_publaynet=None, path_pdf_publaynet=None):
             
             json_with_featchs.add_featchs(lambda: nodes_feature(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['nodes_feature'], 
                                 is_reupdate=False, rewrite=True) 
-        
+
+            # json_with_featchs.add_featchs(lambda: nodes_feature_new_styles(json_with_featchs.json['nodes_feature']), names=['nodes_feature', 'old_nodes_feature'],
+            #                     is_reupdate=True, rewrite=True) 
             json_with_featchs.add_featchs(lambda: edges_feature(json_with_featchs.json['A'], json_with_featchs.json['words']), names=['edges_feature'], 
                                 is_reupdate=True, rewrite=True)
             

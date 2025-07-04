@@ -9,7 +9,7 @@ class TagModule(torch.nn.Module):
     def __init__(self, tag):
         super(TagModule, self).__init__()
         if not "k" in tag.keys():
-            tag["k"] = 3
+            tag["k"] = 6
         self.linear =Linear(tag['in'], tag['size'])
         self.tag = TAGConv(tag['size'], tag['out'], K=tag['k'])
         self.activation = GELU()
@@ -52,9 +52,9 @@ class NodeGLAM(torch.nn.Module):
 
         a = torch.cat([x, h], dim=1)
         for layer in self.Linear:
-            a = self.activation(layer(a))
+            a = layer(self.activation(a))
     
-        cl = self.classifer(a)
+        cl = self.classifer(self.activation(a))
         return a, cl
 
 class EdgeGLAM(torch.nn.Module):
@@ -89,7 +89,12 @@ class CustomLoss(torch.nn.Module):
         self.edge_coef:float = params['edge_coef']
         self.node_coef:float = params['node_coef']
 
-    def forward(self, n_pred, n_true, e_pred, e_true):
+    def forward(self, pred_dict, true_dict):
+        n_pred = pred_dict["node_classes"]
+        e_pred = pred_dict["E_pred"]
+        n_true = true_dict["node_classes"]
+        e_true = true_dict["E_true"]
+        
         loss = self.node_coef*self.ce(n_pred, n_true) + self.edge_coef*self.bce(e_pred, e_true)
         return loss
 
@@ -100,10 +105,18 @@ class TorchModel(torch.nn.Module):
         self.node_emb = NodeGLAM(params)
         self.bin_edge_emb = EdgeGLAM(params)
 
-    def forward(self, X: torch.Tensor, Y: torch.Tensor, sp_A: torch.Tensor, i:List[int]):
-        Node_emb, Node_class = self.node_emb(X, sp_A)
-        Omega = torch.cat([Node_emb[i[0]], Node_emb[i[1]], X[i[0]], X[i[1]], Y],dim=1)
+    def forward(self, data_graph_dict):
+        X: torch.Tensor = data_graph_dict["X"] 
+        Y: torch.Tensor = data_graph_dict["Y"]
+        sp_A: torch.Tensor = data_graph_dict["sp_A"] 
+        inds:List[int] = data_graph_dict["inds"]
+
+        Node_embs, Node_classes = self.node_emb(X, sp_A)
+        Omega = torch.cat([Node_embs[inds[0]], Node_embs[inds[1]], X[inds[0]], X[inds[1]], Y],dim=1)
         E_pred = self.bin_edge_emb(Omega)
-        return Node_class, E_pred
+        return {
+            "node_classes": Node_classes, 
+            "E_pred": E_pred
+        }
     
 

@@ -1,0 +1,36 @@
+S T A R T (exp_00_base)
+class 0 =======
+Precision (IoU=0.50):  0.69724771
+Precision (IoU=0.55):  0.63302752
+Precision (IoU=0.60):  0.61467890
+Precision (IoU=0.65):  0.60550459
+Precision (IoU=0.70):  0.55963303
+Precision (IoU=0.75):  0.53669725
+Precision (IoU=0.80):  0.51834862
+Precision (IoU=0.85):  0.50000000
+Precision (IoU=0.90):  0.48165138
+Precision (IoU=0.95):  0.45871560
+class 0 =======
+Recall (IoU=0.50):  0.32135307
+Recall (IoU=0.55):  0.29175476
+Recall (IoU=0.60):  0.28329810
+Recall (IoU=0.65):  0.27906977
+Recall (IoU=0.70):  0.25792812
+Recall (IoU=0.75):  0.24735729
+Recall (IoU=0.80):  0.23890063
+Recall (IoU=0.85):  0.23044397
+Recall (IoU=0.90):  0.22198732
+Recall (IoU=0.95):  0.21141649
+class 0 =======
+F1 (IoU=0.50):  0.43994211
+F1 (IoU=0.55):  0.39942113
+F1 (IoU=0.60):  0.38784370
+F1 (IoU=0.65):  0.38205499
+F1 (IoU=0.70):  0.35311143
+F1 (IoU=0.75):  0.33863965
+F1 (IoU=0.80):  0.32706223
+F1 (IoU=0.85):  0.31548480
+F1 (IoU=0.90):  0.30390738
+F1 (IoU=0.95):  0.28943560
+mAP@IoU[0.50:0.95] = 0.04931965
+mean time:  3.5779 sec.

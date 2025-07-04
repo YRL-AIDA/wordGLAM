@@ -1,0 +1,36 @@
+S T A R T (exp_05_countTag_and_size_k_mbig/exp_2_kTag_4)
+class 0 =======
+Precision (IoU=0.50):  0.70434783
+Precision (IoU=0.55):  0.63043478
+Precision (IoU=0.60):  0.60869565
+Precision (IoU=0.65):  0.59130435
+Precision (IoU=0.70):  0.55217391
+Precision (IoU=0.75):  0.51304348
+Precision (IoU=0.80):  0.48695652
+Precision (IoU=0.85):  0.46956522
+Precision (IoU=0.90):  0.45652174
+Precision (IoU=0.95):  0.42608696
+class 0 =======
+Recall (IoU=0.50):  0.34249471
+Recall (IoU=0.55):  0.30655391
+Recall (IoU=0.60):  0.29598309
+Recall (IoU=0.65):  0.28752643
+Recall (IoU=0.70):  0.26849894
+Recall (IoU=0.75):  0.24947146
+Recall (IoU=0.80):  0.23678647
+Recall (IoU=0.85):  0.22832981
+Recall (IoU=0.90):  0.22198732
+Recall (IoU=0.95):  0.20718816
+class 0 =======
+F1 (IoU=0.50):  0.46088193
+F1 (IoU=0.55):  0.41251778
+F1 (IoU=0.60):  0.39829303
+F1 (IoU=0.65):  0.38691323
+F1 (IoU=0.70):  0.36130868
+F1 (IoU=0.75):  0.33570413
+F1 (IoU=0.80):  0.31863442
+F1 (IoU=0.85):  0.30725462
+F1 (IoU=0.90):  0.29871977
+F1 (IoU=0.95):  0.27880512
+mAP@IoU[0.50:0.95] = 0.06009735
+mean time:  3.7337 sec.

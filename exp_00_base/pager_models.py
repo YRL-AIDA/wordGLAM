@@ -36,16 +36,22 @@ EXPERIMENT_PARAMS = {
     "epochs": 30,
     "batch_size": 80,
     "learning_rate": 0.005,
-    "Tag": [{"in":-1, "size": 256, "out":128, "k":6}, 
-            {"in":128, "size": 128, "out":128, "k":6},
-            {"in":128, "size": 128, "out":128, "k":6},
-            {"in":128, "size": 64, "out":32, "k":6}],
+    "Tag": [{"in":-1, "size": 256, "out":128}, 
+            {"in":128, "size": 128, "out":128},
+            {"in":128, "size": 128, "out":128},
+            {"in":128, "size": 64, "out":32}],
     "NodeLinear": [-1, 16, 8],
     "EdgeLinear": [8],
     "NodeClasses": 5,
     "batchNormNode": True,
     "batchNormEdge": True,
-    "seg_k": 0.5
+    "seg_k": 0.5,
+    "loss_params": {
+        "publaynet_imbalance": PUBLAYNET_IMBALANCE,
+        "edge_imbalance": EDGE_IMBALANCE,
+        "edge_coef": EDGE_COEF,
+        "node_coef": NODE_COEF,
+    }
 }
 
 def featch_words_and_styles(img_name):
@@ -181,21 +187,9 @@ def get_vec_coord(word):
     return [seg.x_top_left, seg.x_bottom_right, seg.width, seg.y_top_left, seg.y_bottom_right, seg.height]
 
 
-def nodes_feature_new_styles(styles, words, nodes_feature):
-    # fonts = dict()
-    # for st in styles:
-    #     fonts[st['id']] = st['font2vec']
-    # style_vec = np.array([fonts[w['style_id']] for w in words])
-    word_texts = [w['text'] for w in words]
-    dot_vec = np.array([[1.0 if dot in w else 0.0 for dot in (".", ",", ";", ":")] for w in word_texts])
-    key_vec = np.array([get_vec_key(w) for w in word_texts])
-    list_ind_vec = np.array([get_vec_list(w) for w in word_texts])
-    # print(words[0])
-    coord_vec = np.array([get_vec_coord(w) for w in words])
-    rez = np.array(nodes_feature)
-    # ------------------------------------v style_vec
-    nodes_feature = np.concat([coord_vec, rez[:, :-32], dot_vec, key_vec, list_ind_vec, rez[:, -32:]], axis=1)
-    return [nodes_feature.tolist()]
+def nodes_feature_new_styles(nodes_feature):
+    new_feature = np.copy(nodes_feature)[:, :-512]
+    return [new_feature.tolist(), nodes_feature]
 
 def edges_feature(A, words):
     edges_featch = []
@@ -286,7 +280,14 @@ def get_tensor_from_graph(graph):
     X = torch.tensor(data=x, dtype=torch.float32)
     Y = torch.tensor(data=y, dtype=torch.float32)
     sp_A = torch.sparse_coo_tensor(indices=i, values=v_in, size=(N, N), dtype=torch.float32)
-    return X, Y, sp_A, i
+    
+    return {
+        "N": N,
+        "X": X,
+        "Y": Y,
+        "sp_A": sp_A,
+        "inds": i
+    }
 
 class Json2Blocks(WordsAndStylesToGLAMBlocks):
     def __init__(self, conf):
@@ -299,18 +300,20 @@ class Json2Blocks(WordsAndStylesToGLAMBlocks):
         self.model.load_state_dict(torch.load(conf['path_model'], weights_only=True, map_location=torch.device('cpu')))
     
     def segmenter(self, graph) -> List[int]:
-        X, Y, sp_A, i = get_tensor_from_graph(graph)
-        N = X.shape[0]
+        data_graph_dict = get_tensor_from_graph(graph)
+        N = data_graph_dict["N"]
+        i = data_graph_dict["inds"]
+
         if len(i[0]) == 0:
             self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0] for _ in range(N)])
             return np.array([])
         if N == 1:
             self.tmp = np.array([[0.0, 1.0, 0.0, 0.0, 0.0]])
             return np.array([0 for _ in i[0]])
-        Node_class, E_pred = self.model(X, Y, sp_A, i)
-        self.tmp_edge = E_pred.detach().numpy()
+        pred_graph_dict = self.model(data_graph_dict)
+        self.tmp_edge = pred_graph_dict["E_pred"].detach().numpy()
         rez = np.zeros_like(self.tmp_edge)
-        self.tmp = Node_class.detach().numpy()
+        self.tmp = pred_graph_dict["node_classes"].detach().numpy()
         rez[self.tmp_edge>0.5] = 1
         return rez
 

@@ -148,7 +148,18 @@ def get_tensor_from_graph(graph):
         X = []
     if len(Y.shape) != 2 or Y.shape[1] != PARAMS["edge_featch"] or len(Y[0]) in (0, 1):
         X = []
-    return X, Y, sp_A, E_true, N_true, i
+
+    if len(X) in (0, 1):                       
+        return None
+    return {
+        "X": X,
+        "Y": Y,
+        "E_true": E_true,
+        "node_classes": N_true,
+        "sp_A": sp_A,
+        "inds": i
+    }
+
 
 def validation(model, batch, criterion):     
     return step(model, batch, optimizer=None, criterion=criterion, train=False)
@@ -175,11 +186,11 @@ def step(model: torch.nn.Module, batch, optimizer, criterion, train=True):
    
     for j, graph in enumerate(batch):
         try:
-            X, Y, sp_A, E_true, N_true, i = get_tensor_from_graph(graph)
-            if len(X) in (0, 1):                       
+            data_graph_dict = get_tensor_from_graph(graph)
+            if data_graph_dict is None:
                 continue
-            Node_class, E_pred = model(X, Y, sp_A, i)
-            loss = criterion(Node_class.to(device), N_true, E_pred.to(device), E_true)
+            pred_graph_dict = model(data_graph_dict)
+            loss = criterion(pred_graph_dict, data_graph_dict)
             my_loss_list.append(loss.item())
             print(f"{(j+1)/len(batch)*100:.2f} % Batch loss={my_loss_list[-1]:.4f}" + " "*40, end="\r")
         except Exception as e:
