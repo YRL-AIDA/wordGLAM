@@ -2,7 +2,7 @@ import sys, os
 sys.path.append("..")
 from exp_00_base import *
 
-EXPERIMENT_PARAMS["node_featch"]= 15
+EXPERIMENT_PARAMS["node_featch"]= 512+15
 EXPERIMENT_PARAMS["loss_params"]['edge_coef'] =0.8
 EXPERIMENT_PARAMS["loss_params"]['node_coef'] =0.2
 
