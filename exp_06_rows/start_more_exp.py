@@ -4,20 +4,18 @@ import os
 HEADER = "exp_06_rows"
 
 sizes = [
+    [0.01, 0.19, 0.8],
+    [0.02, 0.18, 0.8],
+    [0.04, 0.16, 0.8],
     [0.1, 0.1, 0.8],
-    [0.1, 0.8, 0.1],
-    [0.8, 0.1, 0.1],
-    [0.2, 0.2, 0.6],
-    [0.2, 0.6, 0.2],
-    [0.6, 0.2, 0.2],
-    [0.3, 0.3, 0.4],
-    [0.3, 0.4, 0.3],
-    [0.4, 0.3, 0.3]
+    [0.16, 0.04, 0.8],
+    [0.18, 0.02, 0.8],
+    [0.19, 0.01, 0.8],
 ]
 
 def created_exps():
     
-    for i in range(0, 9):
+    for i in range(0, len(sizes)):
         dir_ = os.path.join(HEADER, f"exp_{i}")
         os.mkdir(dir_)
         file_ = os.path.join(dir_, "__init__.py")
@@ -44,9 +42,9 @@ def start_new_exp(name, header=HEADER):
     subprocess.run(["python", "script_test.py"])
 
 
-if not os.path.exists(os.path.join(HEADER, "exp_2_kTag_2")):
+if not os.path.exists(os.path.join(HEADER, "exp_0")):
     created_exps()
-for i in range(0, 9):
+for i in range(0, len(sizes)):
     dir_ = os.path.join(HEADER, f"exp_{i}", "test_result.txt")
     if not os.path.exists(dir_):
         start_new_exp(f"exp_{i}")

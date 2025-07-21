@@ -51,15 +51,15 @@ def extract(path_dataset, path_img_publaynet=None, path_pdf_publaynet=None):
                                 is_reupdate=False, rewrite=True)
             
             json_with_featchs.add_featchs(lambda: featch_A(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['A'], 
-                                is_reupdate=True, rewrite=True)
+                                is_reupdate=False, rewrite=True)
             
             json_with_featchs.add_featchs(lambda: nodes_feature(json_with_featchs.json['styles'], json_with_featchs.json['words']), names=['nodes_feature'], 
                                 is_reupdate=False, rewrite=True) 
 
-            # json_with_featchs.add_featchs(lambda: nodes_feature_new_styles(json_with_featchs.json['nodes_feature']), names=['nodes_feature', 'old_nodes_feature'],
-            #                     is_reupdate=True, rewrite=True) 
+            json_with_featchs.add_featchs(lambda: nodes_feature_new_styles(json_with_featchs.json['nodes_feature']), names=['nodes_feature', 'old_nodes_feature'],
+                                is_reupdate=False, rewrite=True) 
             json_with_featchs.add_featchs(lambda: edges_feature(json_with_featchs.json['A'], json_with_featchs.json['words']), names=['edges_feature'], 
-                                is_reupdate=True, rewrite=True)
+                                is_reupdate=False, rewrite=True)
             
             json_with_featchs.add_featchs(lambda: true_class_from_publaynet(json_with_featchs.json['blocks'], json_with_featchs.json['words'], json_with_featchs.json['A']), names=["true_edges", "true_nodes"], 
                                 is_reupdate=True, rewrite=True)
